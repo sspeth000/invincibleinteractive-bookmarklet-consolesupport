@@ -11,6 +11,9 @@
       this.braking = 1400;
       this.normalSpeed = 260;
       this.boostSpeed = 520;
+      this.lean = 0;
+      this.leanSmoothing = 9;
+      this.maxLean = 0.42;
       this.image = new Image();
       this.image.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
     }
@@ -27,12 +30,20 @@
       this.vy = moveToward(this.vy, targetVy, rate * dt);
       this.x += this.vx * dt;
       this.y += this.vy * dt;
+
+      // Lean mostly with horizontal motion; vertical motion contributes less.
+      const horizontalLean = (this.vx / maxSpeed) * this.maxLean;
+      const verticalLean = (this.vy / maxSpeed) * this.maxLean * 0.22;
+      const targetLean = Math.max(-this.maxLean, Math.min(this.maxLean, horizontalLean + verticalLean));
+      const blend = 1 - Math.exp(-this.leanSmoothing * dt);
+      this.lean += (targetLean - this.lean) * blend;
     }
     draw(width, height) {
       const ctx = this.ctx;
       ctx.clearRect(0, 0, width, height);
       ctx.save();
       ctx.translate(width / 2, height / 2);
+      ctx.rotate(this.lean);
       if (this.image.complete && this.image.naturalWidth) {
         const h = Math.min(128, Math.max(72, height * 0.16));
         const w = h * this.image.naturalWidth / this.image.naturalHeight;
