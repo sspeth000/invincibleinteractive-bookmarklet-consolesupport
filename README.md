@@ -1,25 +1,23 @@
 # Invincible Interactive — 2D Flight Bookmarklet
 
-A lightweight 2D side-view flight sandbox that can be injected into a webpage.
+A lightweight 2D side-view flight sandbox injected into a webpage.
 
-## Bookmarklet
+## Bookmarklet setup
 
-Create a bookmark in your browser and set its URL/location to this **single line**:
+Create a bookmark, edit its name (for example, **Invincible Flight**), and paste this entire one-line URL into the bookmark's URL/location field:
 
 ```javascript
-javascript:(()=>{const s=document.createElement('script');s.src='https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/game.js';document.head.appendChild(s)})()
+javascript:(()=>{if(document.getElementById('ii-flight-loader')){document.getElementById('ii-flight-loader').remove();}const s=document.createElement('script');s.id='ii-flight-loader';s.src='https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/game.js?cb='+Date.now();s.onload=()=>console.info('[Invincible Interactive] game.js loaded');s.onerror=()=>alert('Could not load game.js. This page may block bookmarklets or raw.githubusercontent.com. Try a normal webpage, then check the browser console.');(document.head||document.documentElement).appendChild(s);})()
 ```
 
-Then open a webpage and click the bookmark. Click it again, or press **Esc**, to close the sandbox.
-
-> Some browsers block bookmarklets pasted directly into the address bar. Save it as a bookmark instead. The script is loaded from this repository's `game.js`.
+Click the saved bookmark on a normal webpage. If it still fails, open the browser developer console and look for the loader message or a Content Security Policy (CSP) error. Some sites block injected scripts; test on a simple page such as a blank tab or a basic website.
 
 ## Controls
 
-- **WASD / Arrow keys:** Fly in any direction
+- **WASD / Arrow keys:** Fly
 - **Shift:** Boost
 - **Esc:** Close the overlay
 
 ## Notes
 
-The current character is an original placeholder drawn with Canvas shapes. The game runs as a page overlay and does not modify the host site's files.
+The character uses the repository's `placeholder.png` sprite. The sandbox is a full-screen page overlay and does not modify the host site's files.
