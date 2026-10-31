@@ -4,17 +4,39 @@
   const previous = document.getElementById(ID);
   if (previous) { previous.remove(); return; }
 
+  // Give even short pages a real document scroll range while the game is open.
+  const page = document.body || document.documentElement;
+  const scrollSpace = document.createElement("div");
+  scrollSpace.setAttribute("aria-hidden", "true");
+  Object.assign(scrollSpace.style, {
+    display: "block", width: "1px", height: "300vh",
+    margin: "0", padding: "0", border: "0", pointerEvents: "none"
+  });
+  page.appendChild(scrollSpace);
+
+  // Ensure mobile browsers use the device viewport without disabling zoom.
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+  const oldViewportContent = viewportMeta ? viewportMeta.getAttribute("content") : null;
+  let addedViewportMeta = false;
+  const viewport = viewportMeta || document.createElement("meta");
+  if (!viewportMeta) {
+    viewport.name = "viewport";
+    document.head.appendChild(viewport);
+    addedViewportMeta = true;
+  }
+  viewport.setAttribute("content", "width=device-width, initial-scale=1, viewport-fit=cover");
+
   const root = document.createElement("div");
   root.id = ID;
   Object.assign(root.style, {
     position:"fixed", inset:"0", width:"100vw", height:"100dvh",
     overflow:"hidden", zIndex:"2147483647", background:"#62bce9",
-    touchAction:"none", userSelect:"none", WebkitUserSelect:"none",
+    touchAction:"auto", userSelect:"none", WebkitUserSelect:"none",
     fontFamily:"system-ui,-apple-system,sans-serif"
   });
 
   const canvas = document.createElement("canvas");
-  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"none"});
+  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"auto"});
   root.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) { alert("This browser could not create the game canvas."); return; }
