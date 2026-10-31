@@ -31,6 +31,9 @@
   const keys = new Set();
   const hero = {x:0,y:0,vx:0,vy:0,facing:1};
   const camera = {x:0,y:0};
+  const heroImage = new Image();
+  heroImage.crossOrigin = "anonymous";
+  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.png";
   const buildings = Array.from({length:100},(_,i)=>({
     x:i*150-1000,width:70+Math.random()*70,height:100+Math.random()*360
   }));
@@ -68,12 +71,19 @@
     for(const b of buildings){const x=b.x-camera.x*.55,y=h-b.height+camera.y*.12;if(x+b.width>0&&x<w)ctx.fillRect(x,y,b.width,b.height);}
     const ground=h-28+camera.y*.2;ctx.fillStyle="#38834d";ctx.fillRect(0,ground,w,h-ground);ctx.fillStyle="#28633b";ctx.fillRect(0,ground,w,6);
     ctx.save();ctx.translate(w/2,h/2);ctx.scale(hero.facing,1);
-    // Stylized original placeholder hero (not a show asset).
-    ctx.fillStyle="#c52b35";ctx.beginPath();ctx.moveTo(-9,-12);ctx.lineTo(-30,8);ctx.lineTo(-22,29);ctx.lineTo(-7,14);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#152e68";ctx.lineWidth=9;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-5,13);ctx.lineTo(-12,28);ctx.moveTo(5,13);ctx.lineTo(12,28);ctx.stroke();
-    ctx.fillStyle="#1769aa";ctx.fillRect(-11,-14,22,30);ctx.fillStyle="#f5d442";ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(7,0);ctx.lineTo(0,7);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#1769aa";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-9,-8);ctx.lineTo(-22,1);ctx.moveTo(9,-8);ctx.lineTo(22,1);ctx.stroke();
-    ctx.fillStyle="#f0bd91";ctx.beginPath();ctx.arc(0,-24,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#4b3025";ctx.beginPath();ctx.arc(0,-28,10,Math.PI,Math.PI*2);ctx.fill();ctx.restore();
+    // Use the repository's uploaded placeholder sprite, preserving its aspect ratio.
+    if(heroImage.complete && heroImage.naturalWidth>0){
+      const spriteH=112, spriteW=spriteH*(heroImage.naturalWidth/heroImage.naturalHeight);
+      ctx.drawImage(heroImage,-spriteW/2,-spriteH/2,spriteW,spriteH);
+    } else {
+      // Visible fallback while the sprite loads or if the image request fails.
+      ctx.fillStyle="#c52b35";ctx.beginPath();ctx.moveTo(-9,-12);ctx.lineTo(-30,8);ctx.lineTo(-22,29);ctx.lineTo(-7,14);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="#152e68";ctx.lineWidth=9;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-5,13);ctx.lineTo(-12,28);ctx.moveTo(5,13);ctx.lineTo(12,28);ctx.stroke();
+      ctx.fillStyle="#1769aa";ctx.fillRect(-11,-14,22,30);ctx.fillStyle="#f5d442";ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(7,0);ctx.lineTo(0,7);ctx.lineTo(-7,0);ctx.closePath();ctx.fill();
+      ctx.strokeStyle="#1769aa";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(-9,-8);ctx.lineTo(-22,1);ctx.moveTo(9,-8);ctx.lineTo(22,1);ctx.stroke();
+      ctx.fillStyle="#f0bd91";ctx.beginPath();ctx.arc(0,-24,10,0,Math.PI*2);ctx.fill();ctx.fillStyle="#4b3025";ctx.beginPath();ctx.arc(0,-28,10,Math.PI,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
     ctx.fillStyle="#101827d9";ctx.fillRect(w-130,12,118,34);ctx.fillStyle="white";ctx.font="13px system-ui";ctx.fillText("Speed "+Math.round(Math.hypot(hero.vx,hero.vy)),w-118,34);
   }
   raf=requestAnimationFrame(tick);
