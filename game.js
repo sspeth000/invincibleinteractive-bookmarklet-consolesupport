@@ -1,6 +1,11 @@
 (() => {
   "use strict";
-
+  const loader = document.createElement("script");
+  loader.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/invincible.js";
+  loader.onload = () => startFlightGame();
+  loader.onerror = () => console.error("Could not load invincible.js");
+  document.head.appendChild(loader);
+  function startFlightGame() {
   const ID = "ii-flight-sandbox";
   const existing = document.getElementById(ID);
   if (existing) { existing.remove(); return; }
@@ -174,7 +179,7 @@
   (document.documentElement || page).appendChild(root);
 
   let width = 1, height = 1, dpr = 1, raf = 0, lastTime = performance.now(), closed = false;
-  const player = { x: 0, y: 0, vx: 0, vy: 0 };
+  const player = new window.InvinciblePlayer(ctx);
 
   function resize() {
     width = window.innerWidth || 1;
@@ -186,63 +191,20 @@
     draw();
   }
 
-  const heroImage = new Image();
-  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
-
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-    ctx.save();
-    ctx.translate(width / 2, height / 2);
-    if (heroImage.complete && heroImage.naturalWidth) {
-      const sh = Math.min(128, Math.max(72, height * 0.16));
-      const sw = sh * heroImage.naturalWidth / heroImage.naturalHeight;
-      ctx.drawImage(heroImage, -sw / 2, -sh / 2, sw, sh);
-    } else {
-      ctx.fillStyle = "#155da4";
-      ctx.fillRect(-12, -15, 24, 34);
-      ctx.fillStyle = "#e9b991";
-      ctx.beginPath(); ctx.arc(0, -25, 10, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#c52d37";
-      ctx.beginPath(); ctx.moveTo(-10, -12); ctx.lineTo(-29, 5); ctx.lineTo(-22, 27); ctx.lineTo(-8, 12); ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
-  }
+  function draw() { player.draw(width, height); }
 
   function tick(now) {
     if (closed) return;
     const dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.05);
     lastTime = now;
 
-    let dx = stickX;
-    let dy = stickY;
-
-    // Smoothly approach the requested velocity; braking is separate from
-    // cruising, so sustained flight reaches the full speed cap without drag.
-    const maxSpeed = active.has("boost") ? 520 : 260;
-    const acceleration = 1800;
-    const braking = 1400;
-    const targetVx = dx * maxSpeed;
-    const targetVy = dy * maxSpeed;
-
-    const moveToward = (value, target, amount) => {
-      if (value < target) return Math.min(value + amount, target);
-      if (value > target) return Math.max(value - amount, target);
-      return target;
-    };
-
-    const rateX = dx || dy ? acceleration : braking;
-    const rateY = dx || dy ? acceleration : braking;
-    player.vx = moveToward(player.vx, targetVx, rateX * dt);
-    player.vy = moveToward(player.vy, targetVy, rateY * dt);
-
-    player.x += player.vx * dt;
-    player.y += player.vy * dt;
+    player.update(stickX, stickY, active.has("boost"), dt);
 
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
 
-    stats.textContent = "SPEED " + Math.round(Math.hypot(player.vx, player.vy)) +
+    stats.textContent = "SPEED " + Math.round(player.speed) +
       (active.has("boost") ? "  BOOST ×2" : "");
     draw();
     raf = requestAnimationFrame(tick);
@@ -265,4 +227,5 @@
   window.addEventListener("resize", resize);
   resize();
   raf = requestAnimationFrame(tick);
+  }
 })();
