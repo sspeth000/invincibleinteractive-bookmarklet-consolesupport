@@ -152,27 +152,10 @@
   const music = new Audio("https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/musicfunk.mp3");
   music.loop = true;
   music.volume = 0.5;
-  const musicButton = makeButton("♫ MUSIC", {
-    position: "absolute", top: "max(8px, env(safe-area-inset-top))",
-    right: "62px", height: "46px", padding: "0 12px", fontSize: "13px",
-    touchAction: "manipulation"
+  music.play().catch(error => {
+    // Browsers may block audible autoplay until the user interacts with the page.
+    console.warn("[Invincible Flight] Automatic music playback was blocked:", error);
   });
-  musicButton.setAttribute("aria-label", "Play or stop background music");
-  musicButton.addEventListener("click", async () => {
-    if (!music.paused) {
-      music.pause();
-      musicButton.textContent = "♫ MUSIC";
-      return;
-    }
-    try {
-      await music.play();
-      musicButton.textContent = "♫ STOP";
-    } catch (error) {
-      console.warn("[Invincible Flight] Music playback was blocked or failed:", error);
-      musicButton.textContent = "♫ MUSIC";
-    }
-  });
-  root.appendChild(musicButton);
 
   const active = new Set();
   function bindHold(button, key) {
