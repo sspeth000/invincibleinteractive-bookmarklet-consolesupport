@@ -4,15 +4,25 @@
   const previous = document.getElementById(ID);
   if (previous) { previous.remove(); return; }
 
-  // Temporarily extend the page so even normally non-scrollable documents scroll.
-  const page = document.body || document.documentElement;
+  // Give the document a real scrollable surface, even on pages that lock body scrolling.
+  const html = document.documentElement;
+  const body = document.body;
+  const oldHtmlOverflow = html.style.getPropertyValue("overflow");
+  const oldBodyOverflow = body ? body.style.getPropertyValue("overflow") : "";
+  const oldHtmlOverflowPriority = html.style.getPropertyPriority("overflow");
+  const oldBodyOverflowPriority = body ? body.style.getPropertyPriority("overflow") : "";
+  html.style.setProperty("overflow", "auto", "important");
+  if (body) body.style.setProperty("overflow", "visible", "important");
+
   const scrollSpace = document.createElement("div");
   scrollSpace.setAttribute("aria-hidden", "true");
   Object.assign(scrollSpace.style, {
-    display: "block", width: "1px", height: "300vh",
-    margin: "0", padding: "0", border: "0", pointerEvents: "none"
+    position: "absolute", top: "0", left: "0",
+    width: "300vw", height: "300vh",
+    margin: "0", padding: "0", border: "0", pointerEvents: "none",
+    zIndex: "-1"
   });
-  page.appendChild(scrollSpace);
+  html.appendChild(scrollSpace);
 
   // Set a mobile-friendly layout viewport, restoring the original on close.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -175,13 +185,13 @@
     player.x+=player.vx*dt;player.y+=player.vy*dt;
 
     // Scroll the document with the hero, extending it as needed in every direction.
-    const scrollX=Math.max(0,window.scrollX+player.vx*dt);
-    const scrollY=Math.max(0,window.scrollY-player.vy*dt);
-    const doc=document.documentElement;
-    const neededWidth=Math.max(doc.scrollWidth,scrollX+width+width);
-    const neededHeight=Math.max(doc.scrollHeight,scrollY+height+height);
-    scrollSpace.style.width=neededWidth+"px";
-    scrollSpace.style.height=neededHeight+"px";
+    const scroller=document.scrollingElement||html;
+    const scrollX=Math.max(0,scroller.scrollLeft+player.vx*dt);
+    const scrollY=Math.max(0,scroller.scrollTop-player.vy*dt);
+    scrollSpace.style.width=Math.max(300*width,scrollX+3*width)+"px";
+    scrollSpace.style.height=Math.max(300*height,scrollY+3*height)+"px";
+    scroller.scrollLeft=scrollX;
+    scroller.scrollTop=scrollY;
     window.scrollTo(scrollX,scrollY);
 
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
