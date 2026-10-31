@@ -4,25 +4,29 @@
   const previous = document.getElementById(ID);
   if (previous) { previous.remove(); return; }
 
-  // Give the document a real scrollable surface, even on pages that lock body scrolling.
+  // Virtual camera: move page elements directly instead of using browser scrolling.
   const html = document.documentElement;
-  const body = document.body;
-  const oldHtmlOverflow = html.style.getPropertyValue("overflow");
-  const oldBodyOverflow = body ? body.style.getPropertyValue("overflow") : "";
-  const oldHtmlOverflowPriority = html.style.getPropertyPriority("overflow");
-  const oldBodyOverflowPriority = body ? body.style.getPropertyPriority("overflow") : "";
-  html.style.setProperty("overflow", "auto", "important");
-  if (body) body.style.setProperty("overflow", "visible", "important");
-
-  const scrollSpace = document.createElement("div");
-  scrollSpace.setAttribute("aria-hidden", "true");
-  Object.assign(scrollSpace.style, {
-    position: "absolute", top: "0", left: "0",
-    width: "300vw", height: "300vh",
-    margin: "0", padding: "0", border: "0", pointerEvents: "none",
-    zIndex: "-1"
+  const body = document.body || html;
+  const movedElements = new Map();
+  function trackPageElement(el) {
+    if (!el || el === root || el === scrollSpace || movedElements.has(el)) return;
+    movedElements.set(el, el.style.translate || "");
+  }
+  Array.from(body.children).forEach(trackPageElement);
+  const pageObserver = new MutationObserver(records => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === 1) trackPageElement(node);
+      }
+    }
   });
-  html.appendChild(scrollSpace);
+  pageObserver.observe(body, { childList: true });
+  function movePage(dx, dy) {
+    for (const [el, original] of movedElements) {
+      if (!el.isConnected) continue;
+      el.style.translate = (original ? original + " " : "") + dx + "px " + dy + "px";
+    }
+  }
 
   // Set a mobile-friendly layout viewport, restoring the original on close.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -184,15 +188,8 @@
     player.vy=Math.max(-maxSpeed,Math.min(maxSpeed,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
 
-    // Scroll the document with the hero, extending it as needed in every direction.
-    const scroller=document.scrollingElement||html;
-    const scrollX=Math.max(0,scroller.scrollLeft+player.vx*dt);
-    const scrollY=Math.max(0,scroller.scrollTop-player.vy*dt);
-    scrollSpace.style.width=Math.max(300*width,scrollX+3*width)+"px";
-    scrollSpace.style.height=Math.max(300*height,scrollY+3*height)+"px";
-    scroller.scrollLeft=scrollX;
-    scroller.scrollTop=scrollY;
-    window.scrollTo(scrollX,scrollY);
+    // Shift the webpage opposite the hero's travel, like a camera following it.
+    movePage(-player.x, -player.y);
 
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
     camera.y+=(player.y-camera.y)*Math.min(1,dt*4.5);
