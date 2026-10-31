@@ -113,6 +113,9 @@
   window.addEventListener("resize",resize);
   resize();
 
+  const heroImage = new Image();
+  heroImage.alt = "Flying hero";
+  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.png";
   function draw(){
     const sky=ctx.createLinearGradient(0,0,0,height);
     sky.addColorStop(0,"#43a8e2");sky.addColorStop(1,"#d5f1ff");
@@ -129,8 +132,15 @@
     ctx.fillStyle="#38834d";ctx.fillRect(0,ground,width,height-ground);
     ctx.fillStyle="#285e3a";ctx.fillRect(0,ground,width,5);
 
-    // Original simple comic-style flying hero, drawn directly so no external sprite can fail.
+    // Use the repository placeholder sprite; keep a drawn fallback if it cannot load.
     ctx.save();ctx.translate(width*.5,height*.5);
+    if (heroImage.complete && heroImage.naturalWidth > 0) {
+      const spriteH = Math.min(128, Math.max(72, height * 0.16));
+      const spriteW = spriteH * heroImage.naturalWidth / heroImage.naturalHeight;
+      ctx.drawImage(heroImage, -spriteW/2, -spriteH/2, spriteW, spriteH);
+      ctx.restore();
+      return;
+    }
     const angle=Math.atan2(player.vy,Math.max(1,Math.abs(player.vx)))*.45;
     ctx.rotate(angle);
     ctx.lineCap="round";ctx.lineJoin="round";
