@@ -1,6 +1,18 @@
 (() => {
   "use strict";
 
+  const showStartupError = error => {
+    console.error("[Invincible Flight] Startup error:", error);
+    try {
+      const panel = document.createElement("div");
+      panel.textContent = "Invincible Flight failed: " + (error && error.message ? error.message : String(error));
+      Object.assign(panel.style, {position:"fixed",top:"12px",left:"12px",right:"12px",zIndex:"2147483647",padding:"12px",background:"#7f1d1d",color:"#fff",font:"14px system-ui",borderRadius:"8px",pointerEvents:"auto"});
+      (document.body || document.documentElement).appendChild(panel);
+    } catch (_) {}
+  };
+
+  try {
+
   class InvinciblePlayer {
     constructor(ctx) {
       this.ctx = ctx;
@@ -63,7 +75,11 @@
 
   const ID = "ii-flight-sandbox";
   const existing = document.getElementById(ID);
-  if (existing) { existing.remove(); return; }
+  if (existing) {
+    if (typeof existing.__iiFlightCleanup === "function") existing.__iiFlightCleanup();
+    else existing.remove();
+    return;
+  }
 
   const page = document.body || document.documentElement;
   const originalTransform = page.style.transform;
@@ -78,6 +94,7 @@
   Object.assign(root.style, {
     position: "fixed", inset: "0", width: "100vw", height: "100vh",
     height: "100dvh", overflow: "hidden", zIndex: "2147483647",
+    display: "block", visibility: "visible", opacity: "1",
     background: "transparent", pointerEvents: "none", userSelect: "none",
     WebkitUserSelect: "none", fontFamily: "system-ui, sans-serif"
   });
@@ -89,7 +106,7 @@
   });
   root.appendChild(canvas);
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) throw new Error("2D canvas context unavailable");
 
   const makeButton = (label, style = {}) => {
     const b = document.createElement("button");
@@ -278,8 +295,12 @@
     root.remove();
   }
 
+  root.__iiFlightCleanup = closeGame;
   close.addEventListener("click", closeGame);
   window.addEventListener("resize", resize);
   resize();
   raf = requestAnimationFrame(tick);
+  } catch (error) {
+    showStartupError(error);
+  }
 })();
