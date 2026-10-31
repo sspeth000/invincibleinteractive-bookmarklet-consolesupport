@@ -170,7 +170,7 @@
     player.vx += dx * acceleration * dt;
     player.vy += dy * acceleration * dt;
 
-    const drag = Math.pow(0.90, dt * 60);
+    const drag = Math.pow(0.91, dt * 60);
     player.vx *= drag;
     player.vy *= drag;
 
