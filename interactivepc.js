@@ -32,10 +32,11 @@
   const shadow = root.attachShadow({ mode: "closed" });
   const shield = document.createElement("style");
   shield.textContent = [
-    ":host { all: initial !important; }",
+    ":host { all: initial !important; color: #fff !important; font-family: system-ui, sans-serif !important; }",
     "*, *::before, *::after { box-sizing: border-box !important; animation: none !important; transition: none !important; text-transform: none !important; letter-spacing: normal !important; }",
+    "#ii-hud, #ii-stats { color: #fff !important; -webkit-text-fill-color: #fff !important; text-shadow: 0 1px 2px #000 !important; }",
     "canvas { display: block !important; }",
-    "button { appearance: none !important; -webkit-appearance: none !important; font-family: system-ui, sans-serif !important; line-height: normal !important; }"
+    "button { appearance: none !important; -webkit-appearance: none !important; color: #fff !important; -webkit-text-fill-color: #fff !important; font-family: system-ui, sans-serif !important; line-height: normal !important; }"
   ].join("\\n");
   shadow.appendChild(shield);
 
@@ -49,6 +50,7 @@
   if (!ctx) throw new Error("Canvas 2D is unavailable");
 
   const hud = document.createElement("div");
+  hud.id = "ii-hud";
   hud.textContent = "INVINCIBLE FLIGHT • WASD / Arrows to fly • Shift to boost • Esc to close";
   Object.assign(hud.style, {
     position: "absolute", top: "14px", left: "50%", transform: "translateX(-50%)",
@@ -60,6 +62,7 @@
   shadow.appendChild(hud);
 
   const stats = document.createElement("div");
+  stats.id = "ii-stats";
   stats.textContent = "SPEED 0";
   Object.assign(stats.style, {
     position: "absolute", top: "62px", right: "14px",
@@ -88,6 +91,9 @@
       this.leanSmoothing = 9;
       this.maxLean = 0.38;
       this.image = new Image();
+      this.image.crossOrigin = "anonymous";
+      this.image.onload = () => this.draw(window.innerWidth || 1, window.innerHeight || 1);
+      this.image.onerror = () => console.warn("[Invincible Flight] Could not load placeholder.webp");
       this.image.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
     }
     get speed() { return Math.round(Math.hypot(this.vx, this.vy)); }
