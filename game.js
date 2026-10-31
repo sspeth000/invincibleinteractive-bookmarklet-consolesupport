@@ -163,8 +163,8 @@
     let dy = Number(active.has("down")) - Number(active.has("up"));
     if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
 
-    const maxSpeed = active.has("boost") ? 520 : 260;
-    const acceleration = 900;
+    const maxSpeed = active.has("boost") ? 1560 : 780;
+    const acceleration = 2700;
     player.vx += dx * acceleration * dt;
     player.vy += dy * acceleration * dt;
     const drag = Math.pow(0.90, dt * 60);
