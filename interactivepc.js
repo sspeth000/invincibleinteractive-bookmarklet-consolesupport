@@ -20,18 +20,31 @@
 
   const root = document.createElement("div");
   root.id = ID;
-  Object.assign(root.style, {
+  // Keep the overlay outside the page's CSS cascade.
+  for (const [property, value] of Object.entries({
     position: "fixed", inset: "0", zIndex: "2147483647",
     pointerEvents: "none", overflow: "hidden",
-    font: "bold 13px system-ui, sans-serif", color: "#fff"
-  });
+    font: "bold 13px system-ui, sans-serif", color: "#fff",
+    display: "block", visibility: "visible", opacity: "1",
+    margin: "0", padding: "0", border: "0", background: "transparent"
+  })) root.style.setProperty(property, value, "important");
+
+  const shadow = root.attachShadow({ mode: "closed" });
+  const shield = document.createElement("style");
+  shield.textContent = [
+    ":host { all: initial !important; }",
+    "*, *::before, *::after { box-sizing: border-box !important; animation: none !important; transition: none !important; text-transform: none !important; letter-spacing: normal !important; }",
+    "canvas { display: block !important; }",
+    "button { appearance: none !important; -webkit-appearance: none !important; font-family: system-ui, sans-serif !important; line-height: normal !important; }"
+  ].join("\\n");
+  shadow.appendChild(shield);
 
   const canvas = document.createElement("canvas");
   Object.assign(canvas.style, {
     position: "absolute", inset: "0", width: "100%", height: "100%",
     pointerEvents: "none"
   });
-  root.appendChild(canvas);
+  shadow.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D is unavailable");
 
@@ -44,7 +57,7 @@
     whiteSpace: "nowrap", maxWidth: "calc(100vw - 24px)",
     textAlign: "center", boxSizing: "border-box"
   });
-  root.appendChild(hud);
+  shadow.appendChild(hud);
 
   const stats = document.createElement("div");
   stats.textContent = "SPEED 0";
@@ -52,7 +65,7 @@
     position: "absolute", top: "62px", right: "14px",
     padding: "8px 10px", background: "#101827dd", borderRadius: "8px"
   });
-  root.appendChild(stats);
+  shadow.appendChild(stats);
 
   const close = document.createElement("button");
   close.textContent = "×";
@@ -63,7 +76,7 @@
     color: "#fff", background: "#8f2028", border: "1px solid #ffffff88",
     borderRadius: "8px", font: "bold 24px system-ui", cursor: "pointer"
   });
-  root.appendChild(close);
+  shadow.appendChild(close);
 
   class Player {
     constructor() {
