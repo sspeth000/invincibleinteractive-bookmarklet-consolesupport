@@ -115,7 +115,7 @@
 
   const heroImage = new Image();
   heroImage.alt = "Flying hero";
-  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.png";
+  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
   function draw(){
     const sky=ctx.createLinearGradient(0,0,0,height);
     sky.addColorStop(0,"#43a8e2");sky.addColorStop(1,"#d5f1ff");
