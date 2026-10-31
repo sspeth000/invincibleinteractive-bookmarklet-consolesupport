@@ -23,7 +23,10 @@
   pageObserver.observe(body, { childList: true });
   function movePage(dx, dy) {
     for (const [el] of movedElements) {
-      if (el.isConnected) el.style.translate = dx + "px " + dy + "px";
+      if (el.isConnected) {
+        const original = movedElements.get(el);
+        el.style.translate = (original ? original + " " : "") + dx + "px " + dy + "px";
+      }
     }
   }
 
@@ -142,7 +145,14 @@
   }
   function closeGame(){
     if(closed)return;closed=true;cancelAnimationFrame(frame);
-    window.removeEventListener("resize",resize);active.clear();root.remove();scrollSpace.remove();\n    if (addedViewportMeta) viewport.remove();\n    else if (oldViewportContent !== null) viewport.setAttribute("content",oldViewportContent);
+    window.removeEventListener("resize",resize);
+    pageObserver.disconnect();
+    active.clear();
+    for (const [el, originalTranslate] of movedElements) {
+      if (el.isConnected) el.style.translate = originalTranslate;
+    }
+    root.remove();
+    if (addedViewportMeta) viewport.remove();\n    else if (oldViewportContent !== null) viewport.setAttribute("content",oldViewportContent);
   }
   close.addEventListener("click",closeGame);
   window.addEventListener("resize",resize);
