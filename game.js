@@ -128,10 +128,10 @@
     buttons.set(key, button);
     pad.appendChild(button);
   }
-  addDirection("▲", "up", 1, 2);
+  addDirection("▲", "down", 1, 2);
   addDirection("◀", "left", 2, 1);
   addDirection("▶", "right", 2, 3);
-  addDirection("▼", "down", 3, 2);
+  addDirection("▼", "up", 3, 2);
   root.appendChild(pad);
 
   const boost = makeButton("BOOST", {
