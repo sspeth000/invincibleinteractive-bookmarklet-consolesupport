@@ -93,6 +93,12 @@
   stats.textContent="SPEED 0";
   root.appendChild(stats);
 
+  const page=document.body||document.documentElement;
+  // Give short pages scrollable room so the real page can travel beneath the overlay.
+  const flightSpace=document.createElement("div");
+  flightSpace.setAttribute("data-ii-flight-space","");
+  Object.assign(flightSpace.style,{position:"absolute",left:"0",top:"0",width:"1px",height:"1px",pointerEvents:"none",visibility:"hidden"});
+  page.appendChild(flightSpace);
   (document.body||document.documentElement).appendChild(root);
 
   let width=0,height=0,dpr=1,frame=0,last=performance.now(),closed=false;
@@ -105,7 +111,7 @@
   }
   function closeGame(){
     if(closed)return;closed=true;cancelAnimationFrame(frame);
-    window.removeEventListener("resize",resize);active.clear();root.remove();
+    window.removeEventListener("resize",resize);active.clear();root.remove();flightSpace.remove();
   }
   close.addEventListener("click",closeGame);
   window.addEventListener("resize",resize);
@@ -150,8 +156,9 @@
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
     // Scroll the real document with the character movement.
-    const pageScale=520;
-    window.scrollBy(player.vx*pageScale*dt,player.vy*pageScale*dt);
+    const pageScale=8000;
+    const sx=player.vx*pageScale*dt,sy=player.vy*pageScale*dt;
+    window.scrollBy({left:sx,top:sy,behavior:"instant"});
     stats.textContent="SPEED "+Math.round(Math.hypot(player.vx,player.vy))+(active.has("boost")?"  BOOST":"");
     draw();frame=requestAnimationFrame(tick);
   }
