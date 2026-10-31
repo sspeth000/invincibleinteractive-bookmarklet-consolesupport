@@ -7,10 +7,10 @@ A lightweight 2D side-view flight sandbox injected into a webpage.
 Create a bookmark, edit its name (for example, **Invincible Flight**), and paste this entire one-line URL into the bookmark's URL/location field:
 
 ```javascript
-javascript:(()=>{if(document.getElementById('ii-flight-loader')){document.getElementById('ii-flight-loader').remove();}const s=document.createElement('script');s.id='ii-flight-loader';s.src='https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/game.js?cb='+Date.now();s.onload=()=>console.info('[Invincible Interactive] game.js loaded');s.onerror=()=>alert('Could not load game.js. This page may block bookmarklets or raw.githubusercontent.com. Try a normal webpage, then check the browser console.');(document.head||document.documentElement).appendChild(s);})()
+javascript:(()=>{const ID='ii-flight-loader-status';let box=document.getElementById(ID);if(!box){box=document.createElement('div');box.id=ID;box.style='position:fixed;z-index:2147483647;top:12px;left:12px;padding:10px 14px;background:#101827;color:white;font:14px system-ui;border-radius:8px';(document.body||document.documentElement).appendChild(box)}box.textContent='Loading Invincible Flight…';fetch('https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/game.js?cb='+Date.now()).then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{const s=document.createElement('script');s.textContent=code;(document.head||document.documentElement).appendChild(s);setTimeout(()=>{if(document.getElementById('ii-flight-sandbox'))box.remove();else box.textContent='Script downloaded, but the game did not initialize. Try another webpage or check browser restrictions.'},1200)}).catch(e=>{box.textContent='Could not download game.js: '+e.message})})()
 ```
 
-Click the saved bookmark on a normal webpage. If it still fails, open the browser developer console and look for the loader message or a Content Security Policy (CSP) error. Some sites block injected scripts; test on a simple page such as a blank tab or a basic website.
+This loader fetches `game.js` and injects its contents, instead of relying on a separate external `<script src>` request. It displays a status message if downloading or initialization fails. Some pages block injected scripts with Content Security Policy (CSP); try a simple webpage if that happens.
 
 ## Controls
 
