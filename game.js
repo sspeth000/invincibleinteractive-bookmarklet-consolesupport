@@ -8,13 +8,13 @@
   root.id = ID;
   Object.assign(root.style, {
     position:"fixed", inset:"0", width:"100vw", height:"100dvh",
-    overflow:"hidden", zIndex:"2147483647", background:"transparent", pointerEvents:"none",
+    overflow:"hidden", zIndex:"2147483647", background:"#62bce9",
     touchAction:"none", userSelect:"none", WebkitUserSelect:"none",
     fontFamily:"system-ui,-apple-system,sans-serif"
   });
 
   const canvas = document.createElement("canvas");
-  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"none",pointerEvents:"none"});
+  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"none"});
   root.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) { alert("This browser could not create the game canvas."); return; }
@@ -35,7 +35,7 @@
     position:"absolute",top:"max(8px,env(safe-area-inset-top))",right:"8px",
     width:"46px",height:"46px",borderRadius:"12px",border:"1px solid #ffffff99",
     background:"#111d32",color:"#fff",font:"bold 22px system-ui",zIndex:"5",
-    touchAction:"manipulation",pointerEvents:"auto"
+    touchAction:"manipulation"
   });
   root.appendChild(close);
 
@@ -44,7 +44,7 @@
     border:"2px solid rgba(255,255,255,.75)",borderRadius:"15px",
     background:"rgba(10,24,45,.88)",color:"#fff",font:"bold 25px system-ui",
     touchAction:"none",userSelect:"none",WebkitUserSelect:"none",
-    display:"flex",alignItems:"center",justifyContent:"center",padding:"0",pointerEvents:"auto",pointerEvents:"auto"
+    display:"flex",alignItems:"center",justifyContent:"center",padding:"0"
   };
   const pad = document.createElement("div");
   Object.assign(pad.style,{
@@ -74,7 +74,7 @@
     position:"absolute",right:"16px",bottom:"max(25px,env(safe-area-inset-bottom))",
     width:"clamp(82px,24vw,112px)",height:"clamp(64px,18vw,82px)",
     border:"2px solid #ffffffaa",borderRadius:"17px",background:"#9b252b",
-    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none",pointerEvents:"auto",pointerEvents:"auto"
+    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none"
   });
   const boostOn=e=>{e.preventDefault();active.add("boost");boost.style.background="#d83a42";};
   const boostOff=e=>{if(e)e.preventDefault();active.delete("boost");boost.style.background="#9b252b";};
@@ -93,17 +93,13 @@
   stats.textContent="SPEED 0";
   root.appendChild(stats);
 
-  const page=document.body||document.documentElement;
-  // Give short pages scrollable room so the real page can travel beneath the overlay.
-  const flightSpace=document.createElement("div");
-  flightSpace.setAttribute("data-ii-flight-space","");
-  Object.assign(flightSpace.style,{position:"absolute",left:"0",top:"0",width:"1px",height:"1px",pointerEvents:"none",visibility:"hidden"});
-  page.appendChild(flightSpace);
   (document.body||document.documentElement).appendChild(root);
 
   let width=0,height=0,dpr=1,frame=0,last=performance.now(),closed=false;
   const player={x:0,y:0,vx:0,vy:0};
-
+  const camera={x:0,y:0};
+  const clouds=Array.from({length:16},(_,i)=>({x:i*260,y:55+(i%5)*85,r:30+(i%3)*12}));
+  const buildings=Array.from({length:90},(_,i)=>({x:i*145-500,height:80+(i*73)%260,width:70+(i*29)%65}));
   function resize(){
     width=window.innerWidth;height=window.innerHeight;dpr=Math.min(window.devicePixelRatio||1,2);
     canvas.width=Math.max(1,Math.round(width*dpr));canvas.height=Math.max(1,Math.round(height*dpr));
@@ -111,27 +107,33 @@
   }
   function closeGame(){
     if(closed)return;closed=true;cancelAnimationFrame(frame);
-    window.removeEventListener("resize",resize);active.clear();root.remove();flightSpace.remove();
+    window.removeEventListener("resize",resize);active.clear();root.remove();
   }
   close.addEventListener("click",closeGame);
   window.addEventListener("resize",resize);
   resize();
 
-  const heroImage = new Image();
-  heroImage.alt = "Flying hero";
-  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
   function draw(){
-    // Render only the hero; the actual webpage is the environment.
-    ctx.clearRect(0,0,width,height);
-    ctx.save();ctx.translate(width*.5,height*.5);
-    if(heroImage.complete&&heroImage.naturalWidth>0){
-      const spriteH=Math.min(128,Math.max(72,height*.16));
-      const spriteW=spriteH*heroImage.naturalWidth/heroImage.naturalHeight;
-      ctx.drawImage(heroImage,-spriteW/2,-spriteH/2,spriteW,spriteH);
-      ctx.restore();return;
+    const sky=ctx.createLinearGradient(0,0,0,height);
+    sky.addColorStop(0,"#43a8e2");sky.addColorStop(1,"#d5f1ff");
+    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
+    ctx.fillStyle="rgba(255,255,255,.78)";
+    for(const c of clouds){
+      const x=((c.x-camera.x*.18)%(width+160)+width+160)%(width+160)-80;
+      const y=c.y-camera.y*.08;
+      ctx.beginPath();ctx.ellipse(x,y,c.r,13,0,0,Math.PI*2);ctx.ellipse(x+25,y-9,c.r*.65,18,0,0,Math.PI*2);ctx.ellipse(x+52,y,c.r*.7,12,0,0,Math.PI*2);ctx.fill();
     }
+    const ground=height-24+camera.y*.12;
+    ctx.fillStyle="#6d91a8";
+    for(const b of buildings){const x=b.x-camera.x*.52,y=ground-b.height;if(x+b.width>-5&&x<width+5)ctx.fillRect(x,y,b.width,b.height);}
+    ctx.fillStyle="#38834d";ctx.fillRect(0,ground,width,height-ground);
+    ctx.fillStyle="#285e3a";ctx.fillRect(0,ground,width,5);
+
+    // Original simple comic-style flying hero, drawn directly so no external sprite can fail.
+    ctx.save();ctx.translate(width*.5,height*.5);
     const angle=Math.atan2(player.vy,Math.max(1,Math.abs(player.vx)))*.45;
-    ctx.rotate(angle);ctx.lineCap="round";ctx.lineJoin="round";
+    ctx.rotate(angle);
+    ctx.lineCap="round";ctx.lineJoin="round";
     ctx.strokeStyle="#155da4";ctx.lineWidth=10;
     ctx.beginPath();ctx.moveTo(-7,12);ctx.lineTo(-13,29);ctx.moveTo(7,12);ctx.lineTo(13,29);ctx.stroke();
     ctx.fillStyle="#155da4";ctx.fillRect(-12,-13,24,30);
@@ -147,18 +149,16 @@
     if(closed)return;
     const dt=Math.min((now-last)/1000,.032);last=now;
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
-    let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
+    let dy=(active.has("down")?1:0)-(active.has("up")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const maxSpeed=active.has("boost")?16:8;
-    player.vx+=dx*4200*dt;player.vy+=dy*4200*dt;
-    const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
-    const max=maxSpeed;
+    const multiplier=active.has("boost")?2.15:1;
+    player.vx+=dx*760*multiplier*dt;player.vy+=dy*760*multiplier*dt;
+    const drag=Math.pow(.88,dt*60);player.vx*=drag;player.vy*=drag;
+    const max=390*multiplier;
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
-    // Scroll the real document with the character movement.
-    const pageScale=8000;
-    const sx=player.vx*pageScale*dt,sy=player.vy*pageScale*dt;
-    window.scrollBy({left:sx,top:sy,behavior:"instant"});
+    camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
+    camera.y+=(player.y-camera.y)*Math.min(1,dt*4.5);
     stats.textContent="SPEED "+Math.round(Math.hypot(player.vx,player.vy))+(active.has("boost")?"  BOOST":"");
     draw();frame=requestAnimationFrame(tick);
   }
