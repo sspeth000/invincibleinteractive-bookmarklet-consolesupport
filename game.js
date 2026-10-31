@@ -61,12 +61,6 @@
     }
   }
 
-  const loader = document.createElement("script");
-  loader.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/invincible.js";
-  loader.onload = () => startFlightGame();
-  loader.onerror = () => console.error("Could not load invincible.js");
-  document.head.appendChild(loader);
-  function startFlightGame() {
   const ID = "ii-flight-sandbox";
   const existing = document.getElementById(ID);
   if (existing) { existing.remove(); return; }
