@@ -1,5 +1,6 @@
 (() => {
   const ID = "ii-flight-sandbox";
+  try {
   if (document.getElementById(ID)) {
     document.getElementById(ID).remove();
     return;
@@ -24,7 +25,7 @@
     borderRadius:"8px", font:"13px system-ui,sans-serif", pointerEvents:"none"
   });
   root.appendChild(hud);
-  document.body.appendChild(root);
+  (document.body || document.documentElement).appendChild(root);
 
   const ctx = canvas.getContext("2d");
   let w=0,h=0, raf=0, last=performance.now();
@@ -87,4 +88,8 @@
     ctx.fillStyle="#101827d9";ctx.fillRect(w-130,12,118,34);ctx.fillStyle="white";ctx.font="13px system-ui";ctx.fillText("Speed "+Math.round(Math.hypot(hero.vx,hero.vy)),w-118,34);
   }
   raf=requestAnimationFrame(tick);
+  } catch (error) {
+    console.error("[Invincible Interactive] startup error:", error);
+    alert("Flight overlay failed to start: " + (error && error.message ? error.message : error));
+  }
 })();
