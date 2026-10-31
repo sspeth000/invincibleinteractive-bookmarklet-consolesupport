@@ -26,7 +26,7 @@
       this.boostSpeed = 520;
       this.lean = 0;
       this.leanSmoothing = 9;
-      this.maxLean = 0.42;
+      this.maxLean = 0.38;
       this.image = new Image();
       this.image.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
     }
