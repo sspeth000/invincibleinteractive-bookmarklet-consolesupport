@@ -4,7 +4,7 @@
   const previous = document.getElementById(ID);
   if (previous) { previous.remove(); return; }
 
-  // Give even short pages a real document scroll range while the game is open.
+  // Temporarily extend the page so even normally non-scrollable documents scroll.
   const page = document.body || document.documentElement;
   const scrollSpace = document.createElement("div");
   scrollSpace.setAttribute("aria-hidden", "true");
@@ -14,7 +14,7 @@
   });
   page.appendChild(scrollSpace);
 
-  // Ensure mobile browsers use the device viewport without disabling zoom.
+  // Set a mobile-friendly layout viewport, restoring the original on close.
   const viewportMeta = document.querySelector('meta[name="viewport"]');
   const oldViewportContent = viewportMeta ? viewportMeta.getAttribute("content") : null;
   let addedViewportMeta = false;
@@ -30,13 +30,13 @@
   root.id = ID;
   Object.assign(root.style, {
     position:"fixed", inset:"0", width:"100vw", height:"100dvh",
-    overflow:"hidden", zIndex:"2147483647", background:"#62bce9",
-    touchAction:"auto", userSelect:"none", WebkitUserSelect:"none",
+    overflow:"hidden", zIndex:"2147483647", background:"transparent", pointerEvents:"none",
+    touchAction:"none", userSelect:"none", WebkitUserSelect:"none",
     fontFamily:"system-ui,-apple-system,sans-serif"
   });
 
   const canvas = document.createElement("canvas");
-  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"auto"});
+  Object.assign(canvas.style,{position:"absolute",inset:"0",width:"100%",height:"100%",display:"block",touchAction:"auto",pointerEvents:"none"});
   root.appendChild(canvas);
   const ctx = canvas.getContext("2d");
   if (!ctx) { alert("This browser could not create the game canvas."); return; }
@@ -57,7 +57,7 @@
     position:"absolute",top:"max(8px,env(safe-area-inset-top))",right:"8px",
     width:"46px",height:"46px",borderRadius:"12px",border:"1px solid #ffffff99",
     background:"#111d32",color:"#fff",font:"bold 22px system-ui",zIndex:"5",
-    touchAction:"manipulation"
+    touchAction:"manipulation",pointerEvents:"auto"
   });
   root.appendChild(close);
 
@@ -66,7 +66,7 @@
     border:"2px solid rgba(255,255,255,.75)",borderRadius:"15px",
     background:"rgba(10,24,45,.88)",color:"#fff",font:"bold 25px system-ui",
     touchAction:"none",userSelect:"none",WebkitUserSelect:"none",
-    display:"flex",alignItems:"center",justifyContent:"center",padding:"0"
+    display:"flex",alignItems:"center",justifyContent:"center",padding:"0",pointerEvents:"auto"
   };
   const pad = document.createElement("div");
   Object.assign(pad.style,{
@@ -96,7 +96,7 @@
     position:"absolute",right:"16px",bottom:"max(25px,env(safe-area-inset-bottom))",
     width:"clamp(82px,24vw,112px)",height:"clamp(64px,18vw,82px)",
     border:"2px solid #ffffffaa",borderRadius:"17px",background:"#9b252b",
-    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none"
+    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none",pointerEvents:"auto"
   });
   const boostOn=e=>{e.preventDefault();active.add("boost");boost.style.background="#d83a42";};
   const boostOff=e=>{if(e)e.preventDefault();active.delete("boost");boost.style.background="#9b252b";};
@@ -135,27 +135,21 @@
   window.addEventListener("resize",resize);
   resize();
 
+  const heroImage = new Image();
+  heroImage.alt = "Flying hero";
+  heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
   function draw(){
-    const sky=ctx.createLinearGradient(0,0,0,height);
-    sky.addColorStop(0,"#43a8e2");sky.addColorStop(1,"#d5f1ff");
-    ctx.fillStyle=sky;ctx.fillRect(0,0,width,height);
-    ctx.fillStyle="rgba(255,255,255,.78)";
-    for(const c of clouds){
-      const x=((c.x-camera.x*.18)%(width+160)+width+160)%(width+160)-80;
-      const y=c.y-camera.y*.08;
-      ctx.beginPath();ctx.ellipse(x,y,c.r,13,0,0,Math.PI*2);ctx.ellipse(x+25,y-9,c.r*.65,18,0,0,Math.PI*2);ctx.ellipse(x+52,y,c.r*.7,12,0,0,Math.PI*2);ctx.fill();
-    }
-    const ground=height-24+camera.y*.12;
-    ctx.fillStyle="#6d91a8";
-    for(const b of buildings){const x=b.x-camera.x*.52,y=ground-b.height;if(x+b.width>-5&&x<width+5)ctx.fillRect(x,y,b.width,b.height);}
-    ctx.fillStyle="#38834d";ctx.fillRect(0,ground,width,height-ground);
-    ctx.fillStyle="#285e3a";ctx.fillRect(0,ground,width,5);
-
-    // Original simple comic-style flying hero, drawn directly so no external sprite can fail.
+    // Transparent overlay: show the actual webpage behind the hero.
+    ctx.clearRect(0,0,width,height);
     ctx.save();ctx.translate(width*.5,height*.5);
+    if (heroImage.complete && heroImage.naturalWidth > 0) {
+      const spriteH = Math.min(128, Math.max(72, height * 0.16));
+      const spriteW = spriteH * heroImage.naturalWidth / heroImage.naturalHeight;
+      ctx.drawImage(heroImage, -spriteW/2, -spriteH/2, spriteW, spriteH);
+      ctx.restore();return;
+    }
     const angle=Math.atan2(player.vy,Math.max(1,Math.abs(player.vx)))*.45;
-    ctx.rotate(angle);
-    ctx.lineCap="round";ctx.lineJoin="round";
+    ctx.rotate(angle);ctx.lineCap="round";ctx.lineJoin="round";
     ctx.strokeStyle="#155da4";ctx.lineWidth=10;
     ctx.beginPath();ctx.moveTo(-7,12);ctx.lineTo(-13,29);ctx.moveTo(7,12);ctx.lineTo(13,29);ctx.stroke();
     ctx.fillStyle="#155da4";ctx.fillRect(-12,-13,24,30);
@@ -171,12 +165,12 @@
     if(closed)return;
     const dt=Math.min((now-last)/1000,.032);last=now;
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
-    let dy=(active.has("down")?1:0)-(active.has("up")?1:0);
+    let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const multiplier=active.has("boost")?2.15:1;
-    player.vx+=dx*760*multiplier*dt;player.vy+=dy*760*multiplier*dt;
-    const drag=Math.pow(.88,dt*60);player.vx*=drag;player.vy*=drag;
-    const max=390*multiplier;
+    const maxSpeed=active.has("boost")?3:1.5;
+    player.vx+=dx*4200*dt;player.vy+=dy*4200*dt;
+    const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
+    const max=maxSpeed;
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
