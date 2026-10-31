@@ -65,7 +65,7 @@
     ["touchend","touchcancel"].forEach(type=>b.addEventListener(type,release,{passive:false}));
     pad.appendChild(b);
   }
-  control("▼","up",1,2); control("◀","left",2,1); control("▶","right",2,3); control("▲","down",3,2);
+  control("▲","up",1,2); control("◀","left",2,1); control("▶","right",2,3); control("▼","down",3,2);
   root.appendChild(pad);
 
   const boost=document.createElement("button");
@@ -159,12 +159,12 @@
     if(closed)return;
     const dt=Math.min((now-last)/1000,.032);last=now;
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
-    let dy=(active.has("down")?1:0)-(active.has("up")?1:0);
+    let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const multiplier=active.has("boost")?5.5:3.2;
-    player.vx+=dx*2200*multiplier*dt;player.vy+=dy*2200*multiplier*dt;
-    const drag=Math.pow(.94,dt*60);player.vx*=drag;player.vy*=drag;
-    const max=1450*multiplier;
+    const multiplier=active.has("boost")?14:7.5;
+    player.vx+=dx*4200*multiplier*dt;player.vy+=dy*4200*multiplier*dt;
+    const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
+    const max=2200*multiplier;
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
