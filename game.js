@@ -161,10 +161,10 @@
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
     let dy=(active.has("down")?1:0)-(active.has("up")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const multiplier=active.has("boost")?2.15:1;
-    player.vx+=dx*760*multiplier*dt;player.vy+=dy*760*multiplier*dt;
+    const multiplier=active.has("boost")?3.5:1.8;
+    player.vx+=dx*1350*multiplier*dt;player.vy+=dy*1350*multiplier*dt;
     const drag=Math.pow(.88,dt*60);player.vx*=drag;player.vy*=drag;
-    const max=390*multiplier;
+    const max=780*multiplier;
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
