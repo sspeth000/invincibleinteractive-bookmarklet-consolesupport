@@ -149,7 +149,7 @@
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
     let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const maxSpeed=active.has("boost")?3:1.5;
+    const maxSpeed=active.has("boost")?16:8;
     player.vx+=dx*4200*dt;player.vy+=dy*4200*dt;
     const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
     const max=maxSpeed;
