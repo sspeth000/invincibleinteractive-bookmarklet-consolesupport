@@ -90,24 +90,77 @@
     button.addEventListener("contextmenu", e => e.preventDefault());
   }
 
+  // Analog thumbstick, styled after a familiar mobile game joystick.
   const pad = document.createElement("div");
   Object.assign(pad.style, {
-    position: "absolute", left: "14px",
-    bottom: "max(16px, env(safe-area-inset-bottom))",
-    width: "min(42vw, 174px)", height: "min(42vw, 174px)",
-    minWidth: "140px", minHeight: "140px", display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)", gridTemplateRows: "repeat(3, 1fr)", gap: "5px"
+    position: "absolute", left: "22px",
+    bottom: "max(22px, env(safe-area-inset-bottom))",
+    width: "min(38vw, 160px)", height: "min(38vw, 160px)",
+    minWidth: "128px", minHeight: "128px", borderRadius: "50%",
+    background: "rgba(18,32,52,.38)", border: "2px solid rgba(255,255,255,.48)",
+    boxShadow: "inset 0 0 18px #0005", pointerEvents: "auto",
+    touchAction: "none"
   });
-  function addDirection(label, key, row, col) {
-    const b = makeButton(label, { gridRow: String(row), gridColumn: String(col), width: "100%", height: "100%", padding: "0" });
-    bindHold(b, key);
-    pad.appendChild(b);
-  }
-  addDirection("▲", "up", 1, 2);
-  addDirection("◀", "left", 2, 1);
-  addDirection("▶", "right", 2, 3);
-  addDirection("▼", "down", 3, 2);
+
+  const knob = document.createElement("div");
+  Object.assign(knob.style, {
+    position: "absolute", left: "50%", top: "50%",
+    width: "44%", height: "44%", borderRadius: "50%",
+    transform: "translate(-50%, -50%)",
+    background: "rgba(220,235,255,.78)", border: "2px solid #ffffffcc",
+    boxShadow: "0 3px 10px #0006", pointerEvents: "none"
+  });
+  pad.appendChild(knob);
   root.appendChild(pad);
+
+  let stickX = 0, stickY = 0, stickPointer = null;
+  function updateStick(e) {
+    const rect = pad.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = Math.min(rect.width, rect.height) * 0.34;
+    let x = (e.clientX - cx) / radius;
+    let y = (e.clientY - cy) / radius;
+    const magnitude = Math.hypot(x, y);
+    if (magnitude > 1) { x /= magnitude; y /= magnitude; }
+    // Small deadzone prevents accidental drift near the center.
+    const deadzone = 0.12;
+    const adjusted = Math.max(0, Math.hypot(x, y) - deadzone) / (1 - deadzone);
+    if (magnitude > 0) {
+      const normalized = Math.hypot(x, y);
+      stickX = x / normalized * adjusted;
+      stickY = y / normalized * adjusted;
+    } else {
+      stickX = 0;
+      stickY = 0;
+    }
+    knob.style.left = (50 + stickX * 34) + "%";
+    knob.style.top = (50 + stickY * 34) + "%";
+  }
+  function resetStick() {
+    stickX = 0;
+    stickY = 0;
+    stickPointer = null;
+    knob.style.left = "50%";
+    knob.style.top = "50%";
+  }
+  pad.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    if (stickPointer !== null) return;
+    stickPointer = e.pointerId;
+    try { pad.setPointerCapture(e.pointerId); } catch (_) {}
+    updateStick(e);
+  });
+  pad.addEventListener("pointermove", e => {
+    if (e.pointerId !== stickPointer) return;
+    e.preventDefault();
+    updateStick(e);
+  });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(type => {
+    pad.addEventListener(type, e => {
+      if (e.pointerId === stickPointer) resetStick();
+    });
+  });
 
   const boost = makeButton("BOOST", {
     position: "absolute", right: "16px", bottom: "max(25px, env(safe-area-inset-bottom))",
@@ -160,9 +213,8 @@
     const dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.05);
     lastTime = now;
 
-    let dx = Number(active.has("right")) - Number(active.has("left"));
-    let dy = Number(active.has("down")) - Number(active.has("up"));
-    if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
+    let dx = stickX;
+    let dy = stickY;
 
     // Smoothly approach the requested velocity; braking is separate from
     // cruising, so sustained flight reaches the full speed cap without drag.
