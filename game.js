@@ -213,7 +213,9 @@
     lastTime = now;
 
     let dx = (active.has("right") ? 1 : 0) - (active.has("left") ? 1 : 0);
-    let dy = (active.has("up") ? 1 : 0) - (active.has("down") ? 1 : 0);
+    // Canvas/page coordinates increase downward, so invert vertical input:
+    // pressing Up moves the hero upward (negative Y), Down moves downward.
+    let dy = (active.has("down") ? 1 : 0) - (active.has("up") ? 1 : 0);
     if (dx && dy) {
       dx *= Math.SQRT1_2;
       dy *= Math.SQRT1_2;
