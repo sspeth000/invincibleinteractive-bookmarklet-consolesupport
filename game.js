@@ -164,18 +164,25 @@
     let dy = Number(active.has("down")) - Number(active.has("up"));
     if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
 
-    // Acceleration with drag preserves the more floaty flight feel.
+    // Smoothly approach the requested velocity; braking is separate from
+    // cruising, so sustained flight reaches the full speed cap without drag.
     const maxSpeed = active.has("boost") ? 520 : 260;
-    const acceleration = 900;
-    player.vx += dx * acceleration * dt;
-    player.vy += dy * acceleration * dt;
+    const acceleration = 1800;
+    const braking = 1400;
+    const targetVx = dx * maxSpeed;
+    const targetVy = dy * maxSpeed;
 
-    const drag = Math.pow(0.91, dt * 60);
-    player.vx *= drag;
-    player.vy *= drag;
+    const moveToward = (value, target, amount) => {
+      if (value < target) return Math.min(value + amount, target);
+      if (value > target) return Math.max(value - amount, target);
+      return target;
+    };
 
-    player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
-    player.vy = Math.max(-maxSpeed, Math.min(maxSpeed, player.vy));
+    const rateX = dx || dy ? acceleration : braking;
+    const rateY = dx || dy ? acceleration : braking;
+    player.vx = moveToward(player.vx, targetVx, rateX * dt);
+    player.vy = moveToward(player.vy, targetVy, rateY * dt);
+
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
