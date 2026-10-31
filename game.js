@@ -161,7 +161,7 @@
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
     let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const multiplier=active.has("boost")?14:7.5;
+    const multiplier=active.has("boost")?3:1.5;
     player.vx+=dx*4200*multiplier*dt;player.vy+=dy*4200*multiplier*dt;
     const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
     const max=2200*multiplier;
