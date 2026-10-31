@@ -128,10 +128,10 @@
     buttons.set(key, button);
     pad.appendChild(button);
   }
-  addDirection("▲", "down", 1, 2);
+  addDirection("▲", "up", 1, 2);
   addDirection("◀", "left", 2, 1);
   addDirection("▶", "right", 2, 3);
-  addDirection("▼", "up", 3, 2);
+  addDirection("▼", "down", 3, 2);
   root.appendChild(pad);
 
   const boost = makeButton("BOOST", {
@@ -213,8 +213,7 @@
     lastTime = now;
 
     let dx = (active.has("right") ? 1 : 0) - (active.has("left") ? 1 : 0);
-    // Canvas/page coordinates increase downward, so invert vertical input:
-    // pressing Up moves the hero upward (negative Y), Down moves downward.
+    // Player coordinates follow screen directions: Up is negative Y.
     let dy = (active.has("down") ? 1 : 0) - (active.has("up") ? 1 : 0);
     if (dx && dy) {
       dx *= Math.SQRT1_2;
@@ -232,8 +231,7 @@
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
-    // Virtual camera: shift page-level elements, not native browser scroll.
-    // Skip the game overlay and preserve each element's original translate.
+    // Virtual camera: move page elements opposite the player, preserving their original translate.
     for (const [element, originalTranslate] of movedElements) {
       if (!element.isConnected) continue;
       element.style.translate =
