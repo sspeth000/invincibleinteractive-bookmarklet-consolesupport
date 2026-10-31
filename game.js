@@ -31,7 +31,7 @@
   Object.assign(root.style, {
     position:"fixed", inset:"0", width:"100vw", height:"100dvh",
     overflow:"hidden", zIndex:"2147483647", background:"transparent", pointerEvents:"none",
-    touchAction:"none", userSelect:"none", WebkitUserSelect:"none",
+    touchAction:"auto", userSelect:"none", WebkitUserSelect:"none",
     fontFamily:"system-ui,-apple-system,sans-serif"
   });
 
@@ -129,7 +129,7 @@
   }
   function closeGame(){
     if(closed)return;closed=true;cancelAnimationFrame(frame);
-    window.removeEventListener("resize",resize);active.clear();root.remove();
+    window.removeEventListener("resize",resize);active.clear();root.remove();scrollSpace.remove();\n    if (addedViewportMeta) viewport.remove();\n    else if (oldViewportContent !== null) viewport.setAttribute("content",oldViewportContent);
   }
   close.addEventListener("click",closeGame);
   window.addEventListener("resize",resize);
