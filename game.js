@@ -44,7 +44,7 @@
     border:"2px solid rgba(255,255,255,.75)",borderRadius:"15px",
     background:"rgba(10,24,45,.88)",color:"#fff",font:"bold 25px system-ui",
     touchAction:"none",userSelect:"none",WebkitUserSelect:"none",
-    display:"flex",alignItems:"center",justifyContent:"center",padding:"0",pointerEvents:"auto"
+    display:"flex",alignItems:"center",justifyContent:"center",padding:"0",pointerEvents:"auto",pointerEvents:"auto"
   };
   const pad = document.createElement("div");
   Object.assign(pad.style,{
@@ -74,7 +74,7 @@
     position:"absolute",right:"16px",bottom:"max(25px,env(safe-area-inset-bottom))",
     width:"clamp(82px,24vw,112px)",height:"clamp(64px,18vw,82px)",
     border:"2px solid #ffffffaa",borderRadius:"17px",background:"#9b252b",
-    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none",pointerEvents:"auto"
+    color:"#fff",font:"900 15px system-ui",letterSpacing:"1px",zIndex:"4",touchAction:"none",pointerEvents:"auto",pointerEvents:"auto"
   });
   const boostOn=e=>{e.preventDefault();active.add("boost");boost.style.background="#d83a42";};
   const boostOff=e=>{if(e)e.preventDefault();active.delete("boost");boost.style.background="#9b252b";};
@@ -97,9 +97,7 @@
 
   let width=0,height=0,dpr=1,frame=0,last=performance.now(),closed=false;
   const player={x:0,y:0,vx:0,vy:0};
-  const camera={x:0,y:0};
-  const clouds=Array.from({length:16},(_,i)=>({x:i*260,y:55+(i%5)*85,r:30+(i%3)*12}));
-  const buildings=Array.from({length:90},(_,i)=>({x:i*145-500,height:80+(i*73)%260,width:70+(i*29)%65}));
+
   function resize(){
     width=window.innerWidth;height=window.innerHeight;dpr=Math.min(window.devicePixelRatio||1,2);
     canvas.width=Math.max(1,Math.round(width*dpr));canvas.height=Math.max(1,Math.round(height*dpr));
@@ -117,13 +115,13 @@
   heroImage.alt = "Flying hero";
   heroImage.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/placeholder.webp";
   function draw(){
-    // Transparent overlay: show the actual webpage behind the hero.
+    // Render only the hero; the actual webpage is the environment.
     ctx.clearRect(0,0,width,height);
     ctx.save();ctx.translate(width*.5,height*.5);
-    if (heroImage.complete && heroImage.naturalWidth > 0) {
-      const spriteH = Math.min(128, Math.max(72, height * 0.16));
-      const spriteW = spriteH * heroImage.naturalWidth / heroImage.naturalHeight;
-      ctx.drawImage(heroImage, -spriteW/2, -spriteH/2, spriteW, spriteH);
+    if(heroImage.complete&&heroImage.naturalWidth>0){
+      const spriteH=Math.min(128,Math.max(72,height*.16));
+      const spriteW=spriteH*heroImage.naturalWidth/heroImage.naturalHeight;
+      ctx.drawImage(heroImage,-spriteW/2,-spriteH/2,spriteW,spriteH);
       ctx.restore();return;
     }
     const angle=Math.atan2(player.vy,Math.max(1,Math.abs(player.vx)))*.45;
@@ -151,8 +149,9 @@
     const max=maxSpeed;
     player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
-    camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
-    camera.y+=(player.y-camera.y)*Math.min(1,dt*4.5);
+    // Scroll the real document with the character movement.
+    const pageScale=520;
+    window.scrollBy(player.vx*pageScale*dt,player.vy*pageScale*dt);
     stats.textContent="SPEED "+Math.round(Math.hypot(player.vx,player.vy))+(active.has("boost")?"  BOOST":"");
     draw();frame=requestAnimationFrame(tick);
   }
