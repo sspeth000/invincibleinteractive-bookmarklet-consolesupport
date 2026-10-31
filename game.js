@@ -164,16 +164,26 @@
     let dy = Number(active.has("down")) - Number(active.has("up"));
     if (dx && dy) { dx *= Math.SQRT1_2; dy *= Math.SQRT1_2; }
 
-    // Exact movement speed: no acceleration or drag ramp.
-    const speed = active.has("boost") ? 520 : 260;
-    player.x += dx * speed * dt;
-    player.y += dy * speed * dt;
+    // Acceleration with drag preserves the more floaty flight feel.
+    const maxSpeed = active.has("boost") ? 520 : 260;
+    const acceleration = 900;
+    player.vx += dx * acceleration * dt;
+    player.vy += dy * acceleration * dt;
+
+    const drag = Math.pow(0.90, dt * 60);
+    player.vx *= drag;
+    player.vy *= drag;
+
+    player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
+    player.vy = Math.max(-maxSpeed, Math.min(maxSpeed, player.vy));
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
 
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
 
-    stats.textContent = "SPEED " + (dx || dy ? speed : 0) +
+    stats.textContent = "SPEED " + Math.round(Math.hypot(player.vx, player.vy)) +
       (active.has("boost") ? "  BOOST ×2" : "");
     draw();
     raf = requestAnimationFrame(tick);
