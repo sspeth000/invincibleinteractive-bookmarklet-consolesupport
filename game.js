@@ -167,12 +167,23 @@
     let dx=(active.has("right")?1:0)-(active.has("left")?1:0);
     let dy=(active.has("up")?1:0)-(active.has("down")?1:0);
     if(dx&&dy){dx*=Math.SQRT1_2;dy*=Math.SQRT1_2;}
-    const maxSpeed=active.has("boost")?3:1.5;
-    player.vx+=dx*4200*dt;player.vy+=dy*4200*dt;
+    const maxSpeed=active.has("boost")?900:450;
+    player.vx+=dx*1500*dt;player.vy+=dy*1500*dt;
     const drag=Math.pow(.97,dt*60);player.vx*=drag;player.vy*=drag;
-    const max=maxSpeed;
-    player.vx=Math.max(-max,Math.min(max,player.vx));player.vy=Math.max(-max,Math.min(max,player.vy));
+    player.vx=Math.max(-maxSpeed,Math.min(maxSpeed,player.vx));
+    player.vy=Math.max(-maxSpeed,Math.min(maxSpeed,player.vy));
     player.x+=player.vx*dt;player.y+=player.vy*dt;
+
+    // Scroll the document with the hero, extending it as needed in every direction.
+    const scrollX=Math.max(0,window.scrollX+player.vx*dt);
+    const scrollY=Math.max(0,window.scrollY-player.vy*dt);
+    const doc=document.documentElement;
+    const neededWidth=Math.max(doc.scrollWidth,scrollX+width+width);
+    const neededHeight=Math.max(doc.scrollHeight,scrollY+height+height);
+    scrollSpace.style.width=neededWidth+"px";
+    scrollSpace.style.height=neededHeight+"px";
+    window.scrollTo(scrollX,scrollY);
+
     camera.x+=(player.x-camera.x)*Math.min(1,dt*4.5);
     camera.y+=(player.y-camera.y)*Math.min(1,dt*4.5);
     stats.textContent="SPEED "+Math.round(Math.hypot(player.vx,player.vy))+(active.has("boost")?"  BOOST":"");
