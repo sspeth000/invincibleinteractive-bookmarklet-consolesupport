@@ -88,6 +88,7 @@
   root.appendChild(stats);
 
   const active = new Set();
+  const buttons = new Map();
 
   function bindHold(button, key) {
     const down = event => {
@@ -124,6 +125,7 @@
       width: "100%", height: "100%", padding: "0"
     });
     bindHold(button, key);
+    buttons.set(key, button);
     pad.appendChild(button);
   }
   addDirection("▲", "up", 1, 2);
@@ -218,10 +220,10 @@
       dy *= Math.SQRT1_2;
     }
 
-    const maxSpeed = active.has("boost") ? 320 : 180;
-    player.vx += dx * 650 * dt;
-    player.vy += dy * 650 * dt;
-    const drag = Math.pow(0.90, dt * 60);
+    const maxSpeed = active.has("boost") ? 900 : 450;
+    player.vx += dx * 1500 * dt;
+    player.vy += dy * 1500 * dt;
+    const drag = Math.pow(0.97, dt * 60);
     player.vx *= drag;
     player.vy *= drag;
     player.vx = Math.max(-maxSpeed, Math.min(maxSpeed, player.vx));
@@ -229,11 +231,12 @@
     player.x += player.vx * dt;
     player.y += player.vy * dt;
 
-    // The sprite stays centered; move the page in the opposite direction.
-    // Restore each element's saved inline translate when the overlay closes.
-    for (const element of movedElements.keys()) {
+    // Virtual camera: move page elements opposite the player, preserving their original translate.
+    for (const [element, originalTranslate] of movedElements) {
       if (!element.isConnected) continue;
-      element.style.translate = (-player.x) + "px " + (-player.y) + "px";
+      element.style.translate =
+        (originalTranslate ? originalTranslate + " " : "") +
+        (-player.x) + "px " + (-player.y) + "px";
     }
 
     stats.textContent = "SPEED " + Math.round(Math.hypot(player.vx, player.vy)) +
