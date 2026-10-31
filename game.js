@@ -4,12 +4,12 @@
   const previous = document.getElementById(ID);
   if (previous) { previous.remove(); return; }
 
-  // Virtual camera: move page elements directly instead of using browser scrolling.
+  // Virtual camera: shift page-level elements without changing native scroll.
   const html = document.documentElement;
   const body = document.body || html;
   const movedElements = new Map();
   function trackPageElement(el) {
-    if (!el || el === root || el === scrollSpace || movedElements.has(el)) return;
+    if (!el || el.id === ID || el.hasAttribute("data-ii-flight-ignore") || movedElements.has(el)) return;
     movedElements.set(el, el.style.translate || "");
   }
   Array.from(body.children).forEach(trackPageElement);
@@ -22,9 +22,8 @@
   });
   pageObserver.observe(body, { childList: true });
   function movePage(dx, dy) {
-    for (const [el, original] of movedElements) {
-      if (!el.isConnected) continue;
-      el.style.translate = (original ? original + " " : "") + dx + "px " + dy + "px";
+    for (const [el] of movedElements) {
+      if (el.isConnected) el.style.translate = dx + "px " + dy + "px";
     }
   }
 
