@@ -266,15 +266,29 @@
   let width = 1, height = 1, dpr = 1, raf = 0, lastTime = performance.now(), closed = false;
   const player = new InvinciblePlayer(ctx);
 
-  function resize() {
-    width = window.innerWidth || 1;
-    height = window.innerHeight || 1;
+  function resize(force = false) {
+    const nextWidth = window.innerWidth || 1;
+    const nextHeight = window.innerHeight || 1;
+
+    // Mobile Safari changes innerHeight as its browser bars animate.
+    // Ignore height-only resize events so the flight camera stays steady.
+    // A meaningful width change indicates rotation or a real layout change.
+    if (!force && Math.abs(nextWidth - width) < 80) return;
+
+    width = nextWidth;
+    height = nextHeight;
+    root.style.width = width + "px";
+    root.style.height = height + "px";
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.max(1, Math.round(width * dpr));
     canvas.height = Math.max(1, Math.round(height * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw();
   }
+
+  const onOrientationChange = () => {
+    requestAnimationFrame(() => resize(true));
+  };
 
   function draw() { ctx.clearRect(0, 0, width, height); player.draw(width, height); }
 
@@ -409,6 +423,7 @@
     closed = true;
     cancelAnimationFrame(raf);
     window.removeEventListener("resize", resize);
+    window.removeEventListener("orientationchange", onOrientationChange);
     active.clear();
     music.pause();
     music.currentTime = 0;
@@ -424,7 +439,8 @@
   root.__iiFlightCleanup = closeGame;
   close.addEventListener("click", closeGame);
   window.addEventListener("resize", resize);
-  resize();
+  window.addEventListener("orientationchange", onOrientationChange);
+  resize(true);
   raf = requestAnimationFrame(tick);
   } catch (error) {
     showStartupError(error);
