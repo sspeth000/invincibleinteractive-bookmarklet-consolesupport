@@ -185,46 +185,58 @@
 
   function showReopenButton() {
     const buttonId = "ii-flight-reopen";
-    document.getElementById(buttonId)?.remove();
-    const button = document.createElement("button");
-    button.id = buttonId;
-    button.type = "button";
-    button.textContent = "✈ Reopen Flight";
-    Object.assign(button.style, {
-      position: "fixed", right: "max(14px, env(safe-area-inset-right))",
-      bottom: "calc(18px + env(safe-area-inset-bottom))",
-      zIndex: "2147483647", display: "block", visibility: "visible",
-      opacity: "1", pointerEvents: "auto", padding: "14px 18px",
-      border: "1px solid #ffffff88", borderRadius: "999px",
-      background: "#10243d", color: "#fff",
-      boxShadow: "0 5px 22px #0007", font: "bold 15px system-ui",
-      cursor: "pointer", touchAction: "manipulation",
-      WebkitAppearance: "none", appearance: "none"
-    });
-    for (const property of ["position", "right", "bottom", "z-index", "display", "visibility", "opacity", "pointer-events"]) {
-      button.style.setProperty(property, button.style.getPropertyValue(property), "important");
-    }
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      button.textContent = "Loading…";
-      try {
-        const response = await fetch("https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js", { cache: "no-store" });
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        const source = await response.text();
-        const script = document.createElement("script");
-        script.textContent = source + "\n//# sourceURL=https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js";
-        (document.head || document.documentElement).appendChild(script);
-        button.remove();
-      } catch (error) {
-        button.disabled = false;
-        button.textContent = "Retry Flight";
-        console.error("[Invincible Flight] Could not reopen configuration:", error);
-      }
-    });
-    (document.documentElement || document.body).appendChild(button);
-  }
+    let button = document.getElementById(buttonId);
 
-  function cleanup() {
+    // Reuse the same launcher every time instead of destroying it.
+    // This keeps the reopen control available across repeated launch/close cycles.
+    if (!button) {
+      button = document.createElement("button");
+      button.id = buttonId;
+      button.type = "button";
+      button.textContent = "✈ Reopen Flight";
+      Object.assign(button.style, {
+        position: "fixed", right: "max(14px, env(safe-area-inset-right))",
+        bottom: "calc(18px + env(safe-area-inset-bottom))",
+        zIndex: "2147483647", display: "block", visibility: "visible",
+        opacity: "1", pointerEvents: "auto", padding: "14px 18px",
+        border: "1px solid #ffffff88", borderRadius: "999px",
+        background: "#10243d", color: "#fff",
+        boxShadow: "0 5px 22px #0007", font: "bold 15px system-ui",
+        cursor: "pointer", touchAction: "manipulation",
+        WebkitAppearance: "none", appearance: "none"
+      });
+      for (const property of ["position", "right", "bottom", "z-index", "display", "visibility", "opacity", "pointer-events"]) {
+        button.style.setProperty(property, button.style.getPropertyValue(property), "important");
+      }
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        button.textContent = "Loading…";
+        try {
+          const response = await fetch("https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js", { cache: "no-store" });
+          if (!response.ok) throw new Error("HTTP " + response.status);
+          const source = await response.text();
+          const script = document.createElement("script");
+          script.textContent = source + "\n//# sourceURL=https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js";
+          (document.head || document.documentElement).appendChild(script);
+          // Keep the button in the DOM, hidden behind the configuration panel.
+          button.disabled = false;
+          button.textContent = "✈ Reopen Flight";
+          button.style.setProperty("display", "none", "important");
+        } catch (error) {
+          button.disabled = false;
+          button.textContent = "Retry Flight";
+          console.error("[Invincible Flight] Could not reopen configuration:", error);
+        }
+      });
+      (document.documentElement || document.body).appendChild(button);
+    }
+
+    button.disabled = false;
+    button.textContent = "✈ Reopen Flight";
+    button.style.setProperty("display", "block", "important");
+    button.style.setProperty("visibility", "visible", "important");
+    button.style.setProperty("pointer-events", "auto", "important");
+  }  function cleanup() {
     if (closed) return;
     closed = true;
     cancelAnimationFrame(raf);
