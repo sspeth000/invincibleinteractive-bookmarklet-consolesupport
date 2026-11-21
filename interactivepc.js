@@ -197,45 +197,39 @@
 
   function drawWindTrail(now) {
     const speed = player.speed;
-    const strength = Math.min(speed / player.boostSpeed, 1);
-    if (trailHistory.length < 2 || speed < 12) return;
+    if (trailHistory.length < 2 || speed < 12 || !player.image.complete || !player.image.naturalWidth) return;
+
     const centerX = w / 2;
     const centerY = h / 2;
-    const characterSize = Math.min(128, Math.max(72, h * 0.16));
-    const backX = -(player.vx / (speed || 1));
-    const backY = -(player.vy / (speed || 1));
-    const startX = centerX + backX * characterSize * 0.42;
-    const startY = centerY + backY * characterSize * 0.42;
-    const points = [{ x: startX, y: startY }];
-    for (let i = trailHistory.length - 1; i >= 0; i--) {
-      const sample = trailHistory[i];
-      points.push({
-        x: centerX + sample.x - player.x,
-        y: centerY + sample.y - player.y
-      });
-    }
+    const imageHeight = Math.min(128, Math.max(72, h * 0.16));
+    const imageWidth = imageHeight * player.image.naturalWidth / player.image.naturalHeight;
+    const strength = Math.min(speed / player.boostSpeed, 1);
+    const samples = 11;
+    const firstIndex = Math.max(0, trailHistory.length - 1 - samples * 2);
+
+    // Draw faded, softly blurred copies of the actual character along its recent path.
+    // Older copies sit farther back, so the effect naturally bends with every turn.
     ctx.save();
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.globalCompositeOperation = "lighter";
-    const drawRibbon = (color, lineWidth, alpha) => {
-      ctx.beginPath();
-      ctx.moveTo(points[0].x, points[0].y);
-      for (let i = 1; i < points.length - 1; i++) {
-        const midX = (points[i].x + points[i + 1].x) / 2;
-        const midY = (points[i].y + points[i + 1].y) / 2;
-        ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
-      }
-      const last = points[points.length - 1];
-      ctx.lineTo(last.x, last.y);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = lineWidth;
+    ctx.globalCompositeOperation = "screen";
+    ctx.filter = "blur(" + (0.8 + strength * 2.2).toFixed(1) + "px)";
+    for (let i = firstIndex; i < trailHistory.length - 1; i += 2) {
+      const sample = trailHistory[i];
+      const age = Math.max(0, Math.min(1, (now - sample.t) / 340));
+      const fade = 1 - age;
+      const x = centerX + sample.x - player.x;
+      const y = centerY + sample.y - player.y;
+      const alpha = (0.035 + strength * 0.12) * fade * fade;
+      if (alpha < 0.004) continue;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(player.lean);
       ctx.globalAlpha = alpha;
-      ctx.stroke();
-    };
-    drawRibbon("#58b9ff", 5 + strength * 5, 0.045 + strength * 0.055);
-    drawRibbon("#9bdcff", 1.5 + strength, 0.16 + strength * 0.2);
-    drawRibbon("#ffffff", 0.8, 0.12 + strength * 0.1);
+      ctx.shadowColor = "#8bcfff";
+      ctx.shadowBlur = 5 + strength * 13;
+      ctx.drawImage(player.image, -imageWidth / 2, -imageHeight / 2, imageWidth, imageHeight);
+      ctx.restore();
+    }
     ctx.restore();
   }
 
