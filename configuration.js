@@ -2,7 +2,6 @@
   "use strict";
 
   const BASE = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/";
-  document.getElementById("ii-flight-reopen")?.remove();
   const ROOT_ID = "ii-flight-configuration";
   const old = document.getElementById(ROOT_ID);
   if (old) old.remove();
