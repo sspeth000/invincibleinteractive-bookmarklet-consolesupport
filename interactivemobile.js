@@ -1,38 +1,5 @@
-(async () => {
+(() => {
   "use strict";
-
-  // Prefer the dedicated PC build on desktop-style pointer devices.
-  // If it cannot be loaded, continue into this file's mobile build,
-  // which also includes WASD, arrow-key, Shift, and Escape support.
-  const hasPCControls = (() => {
-    try {
-      return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    } catch (_) {
-      return false;
-    }
-  })();
-
-  if (hasPCControls) {
-    const previousMobile = document.getElementById("ii-flight-sandbox");
-    if (previousMobile && typeof previousMobile.__iiFlightCleanup === "function") {
-      previousMobile.__iiFlightCleanup();
-    }
-
-    try {
-      const pcScript = document.createElement("script");
-      pcScript.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/interactivepc.js";
-      pcScript.async = true;
-      await new Promise((resolve, reject) => {
-        pcScript.onload = resolve;
-        pcScript.onerror = () => reject(new Error("Could not load the PC controls script"));
-        (document.head || document.documentElement).appendChild(pcScript);
-      });
-      pcScript.remove();
-      return;
-    } catch (error) {
-      console.warn("[Invincible Flight] PC build unavailable; using mobile build with keyboard controls:", error);
-    }
-  }
 
   const showStartupError = error => {
     console.error("[Invincible Flight] Startup error:", error);
@@ -191,7 +158,6 @@
   });
 
   const active = new Set();
-  const keys = new Set();
   function bindHold(button, key) {
     const down = e => {
       e.preventDefault();
@@ -312,44 +278,16 @@
     const dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.05);
     lastTime = now;
 
-    const keyX = (keys.has("d") || keys.has("arrowright") ? 1 : 0) -
-      (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
-    const keyY = (keys.has("s") || keys.has("arrowdown") ? 1 : 0) -
-      (keys.has("w") || keys.has("arrowup") ? 1 : 0);
-    let inputX = stickX + keyX;
-    let inputY = stickY + keyY;
-    const inputLength = Math.hypot(inputX, inputY);
-    if (inputLength > 1) {
-      inputX /= inputLength;
-      inputY /= inputLength;
-    }
-    player.update(inputX, inputY, active.has("boost") || keys.has("shift"), dt);
+    player.update(stickX, stickY, active.has("boost"), dt);
 
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
 
     stats.textContent = "SPEED " + Math.round(player.speed) +
-      (active.has("boost") || keys.has("shift") ? "  BOOST ×2" : "");
+      (active.has("boost") ? "  BOOST ×2" : "");
     draw();
     raf = requestAnimationFrame(tick);
-  }
-
-  function onKeyDown(e) {
-    const key = e.key.toLowerCase();
-    if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright", "shift", "escape"].includes(key)) {
-      e.preventDefault();
-      if (key === "escape") closeGame();
-      else keys.add(key);
-    }
-  }
-  function onKeyUp(e) {
-    keys.delete(e.key.toLowerCase());
-  }
-  function onWindowBlur() {
-    keys.clear();
-    active.clear();
-    resetStick();
   }
 
   function closeGame() {
@@ -357,11 +295,7 @@
     closed = true;
     cancelAnimationFrame(raf);
     window.removeEventListener("resize", resize);
-    window.removeEventListener("keydown", onKeyDown);
-    window.removeEventListener("keyup", onKeyUp);
-    window.removeEventListener("blur", onWindowBlur);
     active.clear();
-    keys.clear();
     music.pause();
     music.currentTime = 0;
     page.style.transform = originalTransform;
@@ -372,9 +306,6 @@
   }
 
   root.__iiFlightCleanup = closeGame;
-  window.addEventListener("keydown", onKeyDown);
-  window.addEventListener("keyup", onKeyUp);
-  window.addEventListener("blur", onWindowBlur);
   close.addEventListener("click", closeGame);
   window.addEventListener("resize", resize);
   resize();
