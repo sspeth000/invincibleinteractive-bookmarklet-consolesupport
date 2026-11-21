@@ -53,7 +53,6 @@
     }
     draw(width, height) {
       const ctx = this.ctx;
-      ctx.clearRect(0, 0, width, height);
       ctx.save();
       ctx.translate(width / 2, height / 2);
       ctx.rotate(this.lean);
@@ -277,7 +276,7 @@
     draw();
   }
 
-  function draw() { player.draw(width, height); }
+  function draw() { ctx.clearRect(0, 0, width, height); player.draw(width, height); }
 
   function drawFlightEffects(now, boosting) {
     if (!boosting) return;
