@@ -194,7 +194,6 @@
       button.id = buttonId;
       button.type = "button";
       button.textContent = "✈";
-      button.title = "Reopen Flight";
       button.setAttribute("aria-label", "Reopen Flight");
       Object.assign(button.style, {
         position: "fixed", right: "max(16px, env(safe-area-inset-right))",
