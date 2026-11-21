@@ -3,8 +3,8 @@
 
   const BASE = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/";
   const ROOT_ID = "ii-flight-configuration";
-  const old = document.getElementById(ROOT_ID);
-  if (old) old.remove();
+  // Keep configuration singleton: repeated launches must not stack or replace an open menu.
+  if (document.getElementById(ROOT_ID)) return;
 
   const root = document.createElement("div");
   root.id = ROOT_ID;
