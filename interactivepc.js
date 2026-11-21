@@ -191,13 +191,19 @@
     button.type = "button";
     button.textContent = "✈ Reopen Flight";
     Object.assign(button.style, {
-      position: "fixed", right: "14px", bottom: "14px",
-      zIndex: "2147483647", padding: "12px 16px",
-      border: "1px solid #ffffff66", borderRadius: "999px",
+      position: "fixed", right: "max(14px, env(safe-area-inset-right))",
+      bottom: "calc(18px + env(safe-area-inset-bottom))",
+      zIndex: "2147483647", display: "block", visibility: "visible",
+      opacity: "1", pointerEvents: "auto", padding: "14px 18px",
+      border: "1px solid #ffffff88", borderRadius: "999px",
       background: "#10243d", color: "#fff",
-      boxShadow: "0 5px 22px #0007", font: "bold 14px system-ui",
-      cursor: "pointer", touchAction: "manipulation"
+      boxShadow: "0 5px 22px #0007", font: "bold 15px system-ui",
+      cursor: "pointer", touchAction: "manipulation",
+      WebkitAppearance: "none", appearance: "none"
     });
+    for (const property of ["position", "right", "bottom", "z-index", "display", "visibility", "opacity", "pointer-events"]) {
+      button.style.setProperty(property, button.style.getPropertyValue(property), "important");
+    }
     button.addEventListener("click", async () => {
       button.disabled = true;
       button.textContent = "Loading…";
@@ -206,7 +212,7 @@
         if (!response.ok) throw new Error("HTTP " + response.status);
         const source = await response.text();
         const script = document.createElement("script");
-        script.textContent = source + "\\n//# sourceURL=https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js";
+        script.textContent = source + "\n//# sourceURL=https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js";
         (document.head || document.documentElement).appendChild(script);
         button.remove();
       } catch (error) {
