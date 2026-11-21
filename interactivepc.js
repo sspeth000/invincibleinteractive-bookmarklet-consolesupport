@@ -120,7 +120,6 @@
       this.lean += (targetLean - this.lean) * (1 - Math.exp(-this.leanSmoothing * dt));
     }
     draw(w, h) {
-      ctx.clearRect(0, 0, w, h);
       ctx.save();
       ctx.translate(w / 2, h / 2);
       ctx.rotate(this.lean);
@@ -172,6 +171,7 @@
     canvas.width = Math.max(1, Math.round(w * dpr));
     canvas.height = Math.max(1, Math.round(h * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
     player.draw(w, h);
   }
   function drawFlightEffects(now, boosting) {
