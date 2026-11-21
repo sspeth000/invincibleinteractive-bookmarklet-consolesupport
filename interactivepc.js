@@ -273,43 +273,6 @@
     ctx.restore();
   }
 
-    const speed = player.speed;
-    if (speed < 18) return;
-    const magnitude = Math.hypot(player.vx, player.vy) || 1;
-    const backX = -player.vx / magnitude;
-    const backY = -player.vy / magnitude;
-    const sideX = -backY;
-    const sideY = backX;
-    const strength = Math.min(speed / player.boostSpeed, 1);
-    const characterSize = Math.min(128, Math.max(72, h * 0.16));
-    const start = characterSize * 0.43;
-    const length = 24 + strength * 94;
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.globalCompositeOperation = "lighter";
-    for (let i = 0; i < 9; i++) {
-      const spread = (i - 4) / 4;
-      const wave = Math.sin(performance.now() * 0.006 + i * 1.7);
-      const side = spread * (7 + strength * 13) + wave * 3;
-      const drift = (i % 3) * 7;
-      const x1 = w / 2 + backX * (start + drift) + sideX * side;
-      const y1 = h / 2 + backY * (start + drift) + sideY * side;
-      const x2 = x1 + backX * (length * (0.65 + (i % 4) * 0.12));
-      const y2 = y1 + backY * (length * (0.65 + (i % 4) * 0.12));
-      ctx.beginPath();
-      ctx.strokeStyle = i % 3 === 0 ? "#ffffff" : "#9bdcff";
-      ctx.lineWidth = i % 3 === 0 ? 2 : 1.2;
-      ctx.globalAlpha = (0.12 + strength * 0.28) * (1 - Math.abs(spread) * 0.42);
-      ctx.moveTo(x1, y1);
-      ctx.quadraticCurveTo(
-        x1 + backX * length * 0.42 + sideX * wave * 5,
-        y1 + backY * length * 0.42 + sideY * wave * 5,
-        x2, y2
-      );
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
 
   function tick(now) {
     if (closed) return;
