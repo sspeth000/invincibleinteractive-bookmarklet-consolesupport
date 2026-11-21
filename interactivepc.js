@@ -182,6 +182,42 @@
     player.draw(w, h);
     raf = requestAnimationFrame(tick);
   }
+
+  function showReopenButton() {
+    const buttonId = "ii-flight-reopen";
+    document.getElementById(buttonId)?.remove();
+    const button = document.createElement("button");
+    button.id = buttonId;
+    button.type = "button";
+    button.textContent = "✈ Reopen Flight";
+    Object.assign(button.style, {
+      position: "fixed", right: "14px", bottom: "14px",
+      zIndex: "2147483647", padding: "12px 16px",
+      border: "1px solid #ffffff66", borderRadius: "999px",
+      background: "#10243d", color: "#fff",
+      boxShadow: "0 5px 22px #0007", font: "bold 14px system-ui",
+      cursor: "pointer", touchAction: "manipulation"
+    });
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      button.textContent = "Loading…";
+      try {
+        const response = await fetch("https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js", { cache: "no-store" });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const source = await response.text();
+        const script = document.createElement("script");
+        script.textContent = source + "\\n//# sourceURL=https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js";
+        (document.head || document.documentElement).appendChild(script);
+        button.remove();
+      } catch (error) {
+        button.disabled = false;
+        button.textContent = "Retry Flight";
+        console.error("[Invincible Flight] Could not reopen configuration:", error);
+      }
+    });
+    (document.documentElement || document.body).appendChild(button);
+  }
+
   function cleanup() {
     if (closed) return;
     closed = true;
@@ -198,6 +234,7 @@
     page.style.willChange = original.willChange;
     document.documentElement.style.scrollBehavior = original.scrollBehavior;
     root.remove();
+    showReopenButton();
   }
   root.__iiCleanup = cleanup;
   close.addEventListener("click", cleanup);
