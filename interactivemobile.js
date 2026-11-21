@@ -85,6 +85,7 @@
   const originalTransform = page.style.transform;
   const originalTransformOrigin = page.style.transformOrigin;
   const originalWillChange = page.style.willChange;
+  const originalFilter = page.style.filter;
   const originalScrollBehavior = document.documentElement.style.scrollBehavior;
 
   // The camera moves the page as one surface. The flight UI lives outside
@@ -297,6 +298,45 @@
     ctx.restore();
   }
 
+  function drawWindTrail() {
+    const speed = player.speed;
+    if (speed < 18) return;
+    const magnitude = Math.hypot(player.vx, player.vy) || 1;
+    const backX = -player.vx / magnitude;
+    const backY = -player.vy / magnitude;
+    const sideX = -backY;
+    const sideY = backX;
+    const strength = Math.min(speed / player.boostSpeed, 1);
+    const characterSize = Math.min(128, Math.max(72, height * 0.16));
+    const start = characterSize * 0.43;
+    const length = 24 + strength * 94;
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 9; i++) {
+      const spread = (i - 4) / 4;
+      const wave = Math.sin(performance.now() * 0.006 + i * 1.7);
+      const side = spread * (7 + strength * 13) + wave * 3;
+      const drift = (i % 3) * 7;
+      const x1 = width / 2 + backX * (start + drift) + sideX * side;
+      const y1 = height / 2 + backY * (start + drift) + sideY * side;
+      const x2 = x1 + backX * (length * (0.65 + (i % 4) * 0.12));
+      const y2 = y1 + backY * (length * (0.65 + (i % 4) * 0.12));
+      ctx.beginPath();
+      ctx.strokeStyle = i % 3 === 0 ? "#ffffff" : "#9bdcff";
+      ctx.lineWidth = i % 3 === 0 ? 2 : 1.2;
+      ctx.globalAlpha = (0.12 + strength * 0.28) * (1 - Math.abs(spread) * 0.42);
+      ctx.moveTo(x1, y1);
+      ctx.quadraticCurveTo(
+        x1 + backX * length * 0.42 + sideX * wave * 5,
+        y1 + backY * length * 0.42 + sideY * wave * 5,
+        x2, y2
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function tick(now) {
     if (closed) return;
     const dt = Math.min(Math.max((now - lastTime) / 1000, 0), 0.05);
@@ -307,13 +347,18 @@
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
+    const blur = Math.min(player.speed / player.boostSpeed, 1) * 1.25;
+    page.style.filter = (originalFilter && originalFilter !== "none" ? originalFilter + " " : "") +
+      (blur > 0.04 ? "blur(" + blur.toFixed(2) + "px)" : "");
 
     const boosting = active.has("boost");
     stats.textContent = "FLIGHT  /  " + String(Math.round(player.speed)).padStart(3, "0") +
       (boosting ? "  •  BOOST" : "");
     stats.style.borderColor = boosting ? "rgba(255,190,110,.85)" : "rgba(135,190,255,.38)";
     stats.style.boxShadow = boosting ? "0 0 18px rgba(255,145,65,.28)" : "0 5px 18px #0005";
-    draw();
+    ctx.clearRect(0, 0, width, height);
+    drawWindTrail();
+    player.draw(width, height);
     drawFlightEffects(now, boosting);
     raf = requestAnimationFrame(tick);
   }
@@ -387,6 +432,7 @@
     page.style.transform = originalTransform;
     page.style.transformOrigin = originalTransformOrigin;
     page.style.willChange = originalWillChange;
+    page.style.filter = originalFilter;
     document.documentElement.style.scrollBehavior = originalScrollBehavior;
     root.remove();
     showReopenButton();
