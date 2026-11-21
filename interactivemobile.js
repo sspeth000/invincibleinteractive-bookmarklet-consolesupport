@@ -1,5 +1,38 @@
-(() => {
+(async () => {
   "use strict";
+
+  // Prefer the dedicated PC build on desktop-style pointer devices.
+  // If it cannot be loaded, continue into this file's mobile build,
+  // which also includes WASD, arrow-key, Shift, and Escape support.
+  const hasPCControls = (() => {
+    try {
+      return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    } catch (_) {
+      return false;
+    }
+  })();
+
+  if (hasPCControls) {
+    const previousMobile = document.getElementById("ii-flight-sandbox");
+    if (previousMobile && typeof previousMobile.__iiFlightCleanup === "function") {
+      previousMobile.__iiFlightCleanup();
+    }
+
+    try {
+      const pcScript = document.createElement("script");
+      pcScript.src = "https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/interactivepc.js";
+      pcScript.async = true;
+      await new Promise((resolve, reject) => {
+        pcScript.onload = resolve;
+        pcScript.onerror = () => reject(new Error("Could not load the PC controls script"));
+        (document.head || document.documentElement).appendChild(pcScript);
+      });
+      pcScript.remove();
+      return;
+    } catch (error) {
+      console.warn("[Invincible Flight] PC build unavailable; using mobile build with keyboard controls:", error);
+    }
+  }
 
   const showStartupError = error => {
     console.error("[Invincible Flight] Startup error:", error);
