@@ -304,8 +304,8 @@
       button.textContent = "✈";
       button.setAttribute("aria-label", "Reopen Flight");
       Object.assign(button.style, {
-        position: "fixed", right: "max(16px, env(safe-area-inset-right))",
-        bottom: "calc(16px + env(safe-area-inset-bottom))",
+        position: "fixed", right: "0px",
+        bottom: "0px",
         zIndex: "2147483647", display: "grid", placeItems: "center",
         visibility: "visible", opacity: "1", pointerEvents: "auto",
         width: "52px", height: "52px", minWidth: "52px", minHeight: "52px",
