@@ -25,6 +25,7 @@
     position: "fixed", inset: "0", zIndex: "2147483647",
     pointerEvents: "none", overflow: "hidden",
     font: "bold 13px system-ui, sans-serif", color: "#fff",
+    transition: "opacity 260ms ease",
     display: "block", visibility: "visible", opacity: "1",
     margin: "0", padding: "0", border: "0", background: "transparent"
   })) root.style.setProperty(property, value, "important");
@@ -54,8 +55,9 @@
   hud.textContent = "INVINCIBLE FLIGHT • WASD / Arrows to fly • Shift to boost • Esc to close";
   Object.assign(hud.style, {
     position: "absolute", top: "14px", left: "50%", transform: "translateX(-50%)",
-    padding: "10px 14px", background: "#081427eF",
-    border: "1px solid #ffffff88", borderRadius: "10px",
+    padding: "10px 14px", background: "linear-gradient(110deg, rgba(8,20,39,.96), rgba(16,42,70,.92))",
+    border: "1px solid rgba(150,205,255,.42)", borderRadius: "12px",
+    boxShadow: "0 5px 22px #0005", letterSpacing: "1px", textShadow: "0 1px 8px #78baff66",
     whiteSpace: "nowrap", maxWidth: "calc(100vw - 24px)",
     textAlign: "center", boxSizing: "border-box"
   });
@@ -66,7 +68,11 @@
   stats.textContent = "SPEED 0";
   Object.assign(stats.style, {
     position: "absolute", top: "62px", right: "14px",
-    padding: "8px 10px", background: "#101827dd", borderRadius: "8px"
+    padding: "9px 12px",
+    background: "linear-gradient(145deg, rgba(20,42,68,.94), rgba(5,13,25,.94))",
+    border: "1px solid rgba(135,190,255,.38)", borderRadius: "10px",
+    boxShadow: "0 5px 18px #0005", letterSpacing: ".8px",
+    font: "800 12px/1.2 system-ui", transition: "border-color 160ms ease, box-shadow 160ms ease"
   });
   shadow.appendChild(stats);
 
@@ -152,7 +158,9 @@
   music.volume = 0.5;
   music.play().catch(() => {});
 
+  root.style.opacity = "0";
   (document.documentElement || page).appendChild(root);
+  requestAnimationFrame(() => root.style.setProperty("opacity", "1", "important"));
   const player = new Player();
   let w = 1, h = 1, dpr = 1, raf = 0, last = performance.now(), closed = false;
 
@@ -165,6 +173,25 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     player.draw(w, h);
   }
+  function drawFlightEffects(now, boosting) {
+    if (!boosting) return;
+    const intensity = Math.min(player.speed / player.boostSpeed, 1);
+    ctx.save();
+    ctx.strokeStyle = "#d8efff";
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.10 + intensity * 0.16;
+    for (let i = 0; i < 16; i++) {
+      const angle = (i / 16) * Math.PI * 2 + now * 0.00008;
+      const inner = Math.min(w, h) * (0.39 + ((i % 3) * 0.035));
+      const outer = Math.min(w, h) * (0.47 + intensity * 0.10);
+      ctx.beginPath();
+      ctx.moveTo(w / 2 + Math.cos(angle) * inner, h / 2 + Math.sin(angle) * inner);
+      ctx.lineTo(w / 2 + Math.cos(angle) * outer, h / 2 + Math.sin(angle) * outer);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function tick(now) {
     if (closed) return;
     const dt = Math.min(Math.max((now - last) / 1000, 0), 0.05);
@@ -178,8 +205,13 @@
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
-    stats.textContent = "SPEED " + player.speed + (keys.has("shift") ? " • BOOST ×2" : "");
+    const boosting = keys.has("shift");
+    stats.textContent = "FLIGHT  /  " + String(player.speed).padStart(3, "0") +
+      (boosting ? "  •  BOOST" : "");
+    stats.style.borderColor = boosting ? "rgba(255,190,110,.85)" : "rgba(135,190,255,.38)";
+    stats.style.boxShadow = boosting ? "0 0 18px rgba(255,145,65,.28)" : "0 5px 18px #0005";
     player.draw(w, h);
+    drawFlightEffects(now, boosting);
     raf = requestAnimationFrame(tick);
   }
 
