@@ -278,25 +278,6 @@
 
   function draw() { ctx.clearRect(0, 0, width, height); player.draw(width, height); }
 
-  function drawFlightEffects(now, boosting) {
-    if (!boosting) return;
-    const intensity = Math.min(player.speed / player.boostSpeed, 1);
-    ctx.save();
-    ctx.strokeStyle = "#d8efff";
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.10 + intensity * 0.16;
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2 + now * 0.00008;
-      const inner = Math.min(width, height) * (0.39 + ((i % 3) * 0.035));
-      const outer = Math.min(width, height) * (0.47 + intensity * 0.10);
-      ctx.beginPath();
-      ctx.moveTo(width / 2 + Math.cos(angle) * inner, height / 2 + Math.sin(angle) * inner);
-      ctx.lineTo(width / 2 + Math.cos(angle) * outer, height / 2 + Math.sin(angle) * outer);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
   const trailHistory = [];
 
   function drawWindTrail(now) {
@@ -337,40 +318,6 @@
     ctx.restore();
   }
 
-  function drawWorldMotion(now) {
-    const speed = player.speed;
-    if (speed < 35) return;
-    const strength = Math.min(speed / player.boostSpeed, 1);
-    const magnitude = Math.hypot(player.vx, player.vy) || 1;
-    const backX = -player.vx / magnitude;
-    const backY = -player.vy / magnitude;
-    const sideX = -backY;
-    const sideY = backX;
-    const travel = (now * (0.035 + strength * 0.11)) % 180;
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.lineCap = "round";
-    for (let i = 0; i < 26; i++) {
-      const seedX = ((i * 137.5) % 997) / 997 * width;
-      const seedY = ((i * 283.7 + 71) % 991) / 991 * height;
-      const side = Math.sin(i * 2.31) * (18 + strength * 34);
-      const drift = (i * 47 + travel) % 180;
-      const x1 = seedX + backX * drift + sideX * side;
-      const y1 = seedY + backY * drift + sideY * side;
-      const length = 22 + strength * (48 + (i % 5) * 13);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x1 + backX * length, y1 + backY * length);
-      ctx.strokeStyle = i % 5 === 0 ? "#ffffff" : "#a9dfff";
-      ctx.lineWidth = i % 5 === 0 ? 2 : 1;
-      ctx.globalAlpha = (0.025 + strength * 0.075) * (0.55 + (i % 4) * 0.12);
-      ctx.shadowColor = "#8bcfff";
-      ctx.shadowBlur = 5 + strength * 8;
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
 
   function tick(now) {
     if (closed) return;
@@ -396,8 +343,6 @@
     ctx.clearRect(0, 0, width, height);
     drawWindTrail(now);
     player.draw(width, height);
-    drawWorldMotion(now);
-    drawFlightEffects(now, boosting);
     raf = requestAnimationFrame(tick);
   }
 
