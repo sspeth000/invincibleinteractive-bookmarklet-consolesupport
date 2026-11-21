@@ -297,7 +297,86 @@
     ctx.restore();
   }
 
-  function drawWindTrail() {
+  const trailHistory = [];
+
+  function drawWindTrail(now) {
+    const speed = player.speed;
+    const strength = Math.min(speed / player.boostSpeed, 1);
+    if (trailHistory.length < 2 || speed < 12) return;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const characterSize = Math.min(128, Math.max(72, height * 0.16));
+    const backX = -(player.vx / (speed || 1));
+    const backY = -(player.vy / (speed || 1));
+    const startX = centerX + backX * characterSize * 0.42;
+    const startY = centerY + backY * characterSize * 0.42;
+    const points = [{ x: startX, y: startY }];
+    for (let i = trailHistory.length - 1; i >= 0; i--) {
+      const sample = trailHistory[i];
+      points.push({
+        x: centerX + sample.x - player.x,
+        y: centerY + sample.y - player.y
+      });
+    }
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalCompositeOperation = "lighter";
+    const drawRibbon = (color, lineWidth, alpha) => {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length - 1; i++) {
+        const midX = (points[i].x + points[i + 1].x) / 2;
+        const midY = (points[i].y + points[i + 1].y) / 2;
+        ctx.quadraticCurveTo(points[i].x, points[i].y, midX, midY);
+      }
+      const last = points[points.length - 1];
+      ctx.lineTo(last.x, last.y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.globalAlpha = alpha;
+      ctx.stroke();
+    };
+    drawRibbon("#58b9ff", 5 + strength * 5, 0.045 + strength * 0.055);
+    drawRibbon("#9bdcff", 1.5 + strength, 0.16 + strength * 0.2);
+    drawRibbon("#ffffff", 0.8, 0.12 + strength * 0.1);
+    ctx.restore();
+  }
+
+  function drawWorldMotion(now) {
+    const speed = player.speed;
+    if (speed < 35) return;
+    const strength = Math.min(speed / player.boostSpeed, 1);
+    const magnitude = Math.hypot(player.vx, player.vy) || 1;
+    const backX = -player.vx / magnitude;
+    const backY = -player.vy / magnitude;
+    const sideX = -backY;
+    const sideY = backX;
+    const travel = (now * (0.035 + strength * 0.11)) % 180;
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.lineCap = "round";
+    for (let i = 0; i < 26; i++) {
+      const seedX = ((i * 137.5) % 997) / 997 * width;
+      const seedY = ((i * 283.7 + 71) % 991) / 991 * height;
+      const side = Math.sin(i * 2.31) * (18 + strength * 34);
+      const drift = (i * 47 + travel) % 180;
+      const x1 = seedX + backX * drift + sideX * side;
+      const y1 = seedY + backY * drift + sideY * side;
+      const length = 22 + strength * (48 + (i % 5) * 13);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 + backX * length, y1 + backY * length);
+      ctx.strokeStyle = i % 5 === 0 ? "#ffffff" : "#a9dfff";
+      ctx.lineWidth = i % 5 === 0 ? 2 : 1;
+      ctx.globalAlpha = (0.025 + strength * 0.075) * (0.55 + (i % 4) * 0.12);
+      ctx.shadowColor = "#8bcfff";
+      ctx.shadowBlur = 5 + strength * 8;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
     const speed = player.speed;
     if (speed < 18) return;
     const magnitude = Math.hypot(player.vx, player.vy) || 1;
@@ -342,11 +421,13 @@
     lastTime = now;
 
     player.update(stickX, stickY, active.has("boost"), dt);
+    trailHistory.push({ x: player.x, y: player.y, t: now });
+    while (trailHistory.length && now - trailHistory[0].t > 340) trailHistory.shift();
 
     page.style.transformOrigin = "0 0";
     page.style.willChange = "transform";
     page.style.transform = "translate3d(" + (-player.x) + "px," + (-player.y) + "px,0)";
-    const blur = Math.min(player.speed / player.boostSpeed, 1) * 1.25;
+    const blur = Math.min(player.speed / player.boostSpeed, 1) * 0.38;
     page.style.filter = (originalFilter && originalFilter !== "none" ? originalFilter + " " : "") +
       (blur > 0.04 ? "blur(" + blur.toFixed(2) + "px)" : "");
 
@@ -356,8 +437,9 @@
     stats.style.borderColor = boosting ? "rgba(255,190,110,.85)" : "rgba(135,190,255,.38)";
     stats.style.boxShadow = boosting ? "0 0 18px rgba(255,145,65,.28)" : "0 5px 18px #0005";
     ctx.clearRect(0, 0, width, height);
-    drawWindTrail();
+    drawWindTrail(now);
     player.draw(width, height);
+    drawWorldMotion(now);
     drawFlightEffects(now, boosting);
     raf = requestAnimationFrame(tick);
   }
