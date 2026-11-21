@@ -10,7 +10,7 @@ Create a bookmark, edit its name (for example, **Invincible Flight**), and paste
 javascript:(()=>{const ID='ii-flight-loader-status';let box=document.getElementById(ID);if(!box){box=document.createElement('div');box.id=ID;Object.assign(box.style,{position:'fixed',zIndex:2147483647,top:'12px',left:'12px',padding:'10px 14px',background:'#101827',color:'white',font:'14px system-ui',borderRadius:'8px',maxWidth:'90vw'});(document.body||document.documentElement).appendChild(box)}box.textContent='Loading Invincible Flight configuration…';fetch('https://raw.githubusercontent.com/sspeth000/invincibleinteractive-bookmarklet-consolesupport/main/configuration.js').then(r=>{if(!r.ok)throw Error('HTTP '+r.status);return r.text()}).then(code=>{const s=document.createElement('script');s.textContent=code;(document.head||document.documentElement).appendChild(s);box.remove()}).catch(e=>{box.textContent='Could not load configuration.js: '+e.message})})()
 ```
 
-The bookmarklet loads `configuration.js`. Choose **Mobile** or **PC** in the on-page selector, and the configuration file loads the matching game script. The game scripts stay separate, so mobile uses touch controls and PC uses keyboard controls.
+The bookmarklet loads `configuration.js`. Choose **Mobile** or **PC** in the on-page selector, and the configuration file loads the matching game script. The game scripts stay separate, so mobile uses touch controls and PC uses keyboard controls. Closing either version leaves a **Reopen Flight** button on the page. Tap it to bring the configuration screen back without rerunning the bookmarklet.
 
 ## Controls
 
